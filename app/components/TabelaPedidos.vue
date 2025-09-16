@@ -190,15 +190,24 @@ const pedidosFiltrados = computed(() => {
 
   // Filtro por data
   if (props.filtros?.dataInicio) {
-    resultado = resultado.filter(pedido => 
-      new Date(pedido.created_at) >= new Date(props.filtros!.dataInicio!)
-    )
+    const dataInicio = new Date(props.filtros.dataInicio)
+    dataInicio.setHours(0, 0, 0, 0) // Define como início do dia
+    
+    resultado = resultado.filter(pedido => {
+      const dataPedido = new Date(pedido.created_at)
+      dataPedido.setHours(0, 0, 0, 0) // Remove horário para comparar apenas a data
+      return dataPedido >= dataInicio
+    })
   }
 
   if (props.filtros?.dataFim) {
-    resultado = resultado.filter(pedido => 
-      new Date(pedido.created_at) <= new Date(props.filtros!.dataFim!)
-    )
+    const dataFim = new Date(props.filtros.dataFim)
+    dataFim.setHours(23, 59, 59, 999) // Define como final do dia
+    
+    resultado = resultado.filter(pedido => {
+      const dataPedido = new Date(pedido.created_at)
+      return dataPedido <= dataFim
+    })
   }
 
   // Filtro por número do pedido
