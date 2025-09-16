@@ -173,6 +173,9 @@ interface Props {
     dataFim?: string
     numeroPedido?: string
     nomeCliente?: string
+    formaPagamento?: string
+    tipoRetirada?: string
+    valorMinimo?: string
   }
 }
 
@@ -210,6 +213,30 @@ const pedidosFiltrados = computed(() => {
     resultado = resultado.filter(pedido => 
       pedido.nome_cliente.toLowerCase().includes(props.filtros!.nomeCliente!.toLowerCase())
     )
+  }
+
+  // Filtro por forma de pagamento
+  if (props.filtros?.formaPagamento) {
+    resultado = resultado.filter(pedido => 
+      pedido.forma_pagamento === props.filtros!.formaPagamento!
+    )
+  }
+
+  // Filtro por tipo de retirada
+  if (props.filtros?.tipoRetirada) {
+    resultado = resultado.filter(pedido => 
+      pedido.tipo_retirada === props.filtros!.tipoRetirada!
+    )
+  }
+
+  // Filtro por valor mínimo
+  if (props.filtros?.valorMinimo) {
+    const valorMin = parseFloat(props.filtros.valorMinimo)
+    if (!isNaN(valorMin)) {
+      resultado = resultado.filter(pedido => 
+        pedido.valor_total >= valorMin
+      )
+    }
   }
 
   // Ordenar por data mais recente
