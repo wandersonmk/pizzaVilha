@@ -10,9 +10,9 @@
       </p>
     </div>
 
-    <!-- Tabela Responsiva -->
-    <div class="overflow-x-auto">
-      <table class="w-full divide-y divide-border">
+    <!-- Tabela Responsiva com Scroll Vertical e Horizontal apenas em mobile -->
+    <div class="overflow-y-auto max-h-96 overflow-x-auto lg:overflow-x-visible">
+      <table class="w-full divide-y divide-border min-w-full lg:min-w-0">
         <!-- Cabeçalho -->
         <thead class="bg-muted">
           <tr>

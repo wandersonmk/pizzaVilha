@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto">
+  <div class="w-full">
     <!-- Header com Indicadores (Desktop) -->
     <div class="hidden md:flex items-center justify-between mb-8">
       <div class="flex items-center">
@@ -32,10 +32,12 @@
     </div>
 
     <!-- Filtros -->
-    <FiltrosPedidos 
-      v-model="filtros"
-      @export="exportarRelatorio"
-    />
+    <div class="mb-6">
+      <FiltrosPedidos 
+        v-model="filtros"
+        @export="exportarRelatorio"
+      />
+    </div>
 
     <!-- Cards de Resumo (Mobile) -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 md:hidden">
@@ -57,14 +59,17 @@
       </div>
     </div>
 
-    <!-- Tabela de Pedidos -->
-    <TabelaPedidos 
-      :pedidos="pedidosMock"
-      :filtros="filtros"
-    />
+    <!-- Tabela de Pedidos - Container com largura máxima removida -->
+    <div class="mb-8">
+      <TabelaPedidos 
+        :pedidos="pedidosMock"
+        :filtros="filtros"
+      />
+    </div>
 
     <!-- Cards de Análise -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Top Clientes -->
       <div class="bg-card rounded-lg shadow-sm border border-border">
         <div class="px-6 py-4 border-b border-border">
@@ -110,6 +115,7 @@
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   </div>
