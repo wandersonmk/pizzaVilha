@@ -188,25 +188,30 @@ const props = withDefaults(defineProps<Props>(), {
 const pedidosFiltrados = computed(() => {
   let resultado = [...props.pedidos]
 
-  // Filtro por data
-  if (props.filtros?.dataInicio) {
-    const dataInicio = new Date(props.filtros.dataInicio)
-    dataInicio.setHours(0, 0, 0, 0) // Define como início do dia
-    
+  // Filtro por data - usando comparação de strings YYYY-MM-DD
+  if (props.filtros?.dataInicio || props.filtros?.dataFim) {
     resultado = resultado.filter(pedido => {
+      // Converter data do pedido para formato YYYY-MM-DD
       const dataPedido = new Date(pedido.created_at)
-      dataPedido.setHours(0, 0, 0, 0) // Remove horário para comparar apenas a data
-      return dataPedido >= dataInicio
-    })
-  }
-
-  if (props.filtros?.dataFim) {
-    const dataFim = new Date(props.filtros.dataFim)
-    dataFim.setHours(23, 59, 59, 999) // Define como final do dia
-    
-    resultado = resultado.filter(pedido => {
-      const dataPedido = new Date(pedido.created_at)
-      return dataPedido <= dataFim
+      const dataPedidoStr = dataPedido.getFullYear() + '-' + 
+                           String(dataPedido.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(dataPedido.getDate()).padStart(2, '0')
+      
+      let incluir = true
+      
+      // Verificar data início
+      if (props.filtros?.dataInicio) {
+        const dataInicioStr = props.filtros.dataInicio // Já vem no formato YYYY-MM-DD
+        incluir = incluir && dataPedidoStr >= dataInicioStr
+      }
+      
+      // Verificar data fim
+      if (props.filtros?.dataFim) {
+        const dataFimStr = props.filtros.dataFim // Já vem no formato YYYY-MM-DD
+        incluir = incluir && dataPedidoStr <= dataFimStr
+      }
+      
+      return incluir
     })
   }
 
@@ -328,3 +333,41 @@ const getStatusBadgeClass = (status: string) => {
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
 </script>
+
+<style scoped>
+/* Estilização da scrollbar para tema escuro */
+.overflow-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 #1f2937;
+}
+
+.overflow-auto::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.overflow-auto::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 4px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+  border: 1px solid #1f2937;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+.overflow-auto::-webkit-scrollbar-corner {
+  background: #1f2937;
+}
+
+/* Para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 #1f2937;
+}
+</style>
