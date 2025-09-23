@@ -1,19 +1,42 @@
-# Agzap - Gestão de Clientes
+# 🍕 Pizza Vilha - Sistema de Gestão de Pizzaria
 
-## Ambiente (.env)
+Sistema completo de gestão para pizzarias desenvolvido com Nuxt 4, TypeScript e Supabase.
+
+## 🚀 Funcionalidades
+
+- **Gestão de Cardápio**: Criação e edição de produtos, categorias e complementos
+- **Gestão de Pedidos**: Controle completo de pedidos com status e filtros
+- **Gestão de Clientes**: Cadastro e controle de clientes
+- **Autenticação**: Sistema seguro de login e registro
+- **Relatórios**: Exportação em PDF e Excel
+- **Dashboard**: Visão geral do negócio
+- **Configurações**: Personalização da empresa
+
+## 🛠️ Tecnologias
+
+- **Frontend**: Nuxt 4, Vue 3, TypeScript
+- **Styling**: Tailwind CSS
+- **Backend**: Supabase (PostgreSQL)
+- **Autenticação**: Supabase Auth
+- **Ícones**: Font Awesome
+
+## 📋 Ambiente (.env)
 
 Crie um arquivo `.env` na raiz do projeto com as credenciais do Supabase:
 
-```
-NUXT_PUBLIC_SUPABASE_URL=coloque_aqui
-NUXT_PUBLIC_SUPABASE_ANON_KEY=coloque_aqui
+```env
+NUXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
+NUXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
 ```
 
-Observações:
-- Variáveis iniciadas com `NUXT_PUBLIC_` são expostas no cliente (uso no navegador).
-- Nunca coloque a Service Role Key no cliente. Se precisar usá-la, mantenha-a apenas no servidor.
+⚠️ **Observações importantes**:
+- Variáveis iniciadas com `NUXT_PUBLIC_` são expostas no cliente (uso no navegador)
+- Nunca coloque a Service Role Key no cliente
+- Se precisar usar a Service Role Key, mantenha-a apenas no servidor
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+## 📚 Documentação
+
+Consulte a [documentação do Nuxt](https://nuxt.com/docs/getting-started/introduction) para mais informações.
 
 ## Setup
 
