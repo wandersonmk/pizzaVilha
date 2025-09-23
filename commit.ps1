@@ -1,5 +1,18 @@
 # Script PowerShell para facilitar commits e push para o GitHub
-# Uso: .\commit.ps1 "mensagem do commit"
+# Uso: .\commit.ps1 "tipo: descrição da mudança"
+#
+# Tipos disponíveis:
+# - adiciona: Novas funcionalidades
+# - corrige: Correção de bugs  
+# - atualiza: Modificações em funcionalidades
+# - remove: Remoção de código
+# - refatora: Refatoração de código
+# - docs: Atualizações na documentação
+# - config: Mudanças em configurações
+# - estilo: Formatação e espaçamento
+# - testa: Adição ou modificação de testes
+#
+# Exemplo: .\commit.ps1 "adiciona: sistema de autenticação"
 
 param(
     [Parameter(Mandatory=$true)]

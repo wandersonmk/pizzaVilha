@@ -34,13 +34,9 @@ NUXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
 - Nunca coloque a Service Role Key no cliente
 - Se precisar usar a Service Role Key, mantenha-a apenas no servidor
 
-## 📚 Documentação
+## � Instalação e Execução
 
-Consulte a [documentação do Nuxt](https://nuxt.com/docs/getting-started/introduction) para mais informações.
-
-## Setup
-
-Make sure to install dependencies:
+### Instalação de dependências
 
 ```bash
 # npm
@@ -56,9 +52,9 @@ yarn install
 bun install
 ```
 
-## Development Server
+### Servidor de desenvolvimento
 
-Start the development server on `http://localhost:3000`:
+Inicie o servidor de desenvolvimento em `http://localhost:3000`:
 
 ```bash
 # npm
@@ -74,9 +70,7 @@ yarn dev
 bun run dev
 ```
 
-## Production
-
-Build the application for production:
+### Build para produção
 
 ```bash
 # npm
@@ -87,6 +81,32 @@ pnpm build
 
 # yarn
 yarn build
+
+# bun
+bun run build
+```
+
+## 📝 Convenções de Commit
+
+Este projeto usa convenções de commit em português. Consulte o arquivo [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md) para detalhes.
+
+### Scripts de commit rápido
+
+Para facilitar commits, use os scripts disponíveis:
+
+```powershell
+# PowerShell (Windows)
+.\commit.ps1 "adiciona: nova funcionalidade de relatórios"
+```
+
+```bash
+# Bash (Linux/Mac)  
+./commit.sh "adiciona: nova funcionalidade de relatórios"
+```
+
+## 📚 Documentação
+
+Consulte a [documentação do Nuxt](https://nuxt.com/docs/getting-started/introduction) para mais informações.
 
 # bun
 bun run build
