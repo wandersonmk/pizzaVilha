@@ -384,7 +384,7 @@ const printOrder = (pedido: Pedido) => {
     </head>
     <body>
       <div class="header">
-        <div class="restaurant-name">AGZAP DELIVERY</div>
+        <div class="restaurant-name">PIZZAVILHA</div>
         <div>Tel: (11) 99999-9999</div>
       </div>
       
@@ -443,7 +443,7 @@ const printOrder = (pedido: Pedido) => {
       
       <div class="footer">
         <div>Obrigado pela preferência!</div>
-        <div>www.agzap.com.br</div>
+        <div>PizzaVilha</div>
         <div>${formatDateTime(new Date())}</div>
       </div>
     </body>
