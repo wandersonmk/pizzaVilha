@@ -7,8 +7,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   try {
     console.log('[Auth Middleware] Iniciando verificação...')
     
-    // Aguardar o plugin de auth ter executado - aumentado para dar mais tempo
-    await new Promise(resolve => setTimeout(resolve, 1200))
+    // Aguardar o plugin de auth ter executado - tempo reduzido
+    await new Promise(resolve => setTimeout(resolve, 300))
     
     const { isAuthenticated, user, isLoading } = useAuth()
     
@@ -19,22 +19,17 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       email: user.value?.email
     })
     
-    // Aguarda o carregamento ser concluído se ainda estiver carregando
-    let attempts = 0
-    const maxAttempts = 15 // Aumentado para 1.5 segundo adicional
-    
-    while (isLoading.value && attempts < maxAttempts) {
-      console.log(`[Auth Middleware] Aguardando loading... tentativa ${attempts + 1}`)
-      await new Promise(resolve => setTimeout(resolve, 100))
-      attempts++
+    // Se ainda está carregando, aguarda um pouco mais
+    if (isLoading.value) {
+      console.log('[Auth Middleware] Aguardando carregamento finalizar...')
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
     
     console.log('[Auth Middleware] Estado final:', { 
       isAuthenticated: isAuthenticated.value, 
       hasUser: !!user.value,
       isLoading: isLoading.value,
-      email: user.value?.email,
-      attempts 
+      email: user.value?.email
     })
     
     // Se ainda não está autenticado, tenta verificar diretamente no Supabase

@@ -47,35 +47,6 @@ export function useAuth() {
   }
 
   // Função de inicialização
-  const initialize = async () => {
-    const client = getSupabase()
-    if (!client) return
-    
-    try {
-      isLoading.value = true
-      const { data, error } = await client.auth.getSession()
-      
-      if (error) {
-        console.error('[useAuth] Erro ao obter sessão:', error)
-        const translatedError = translateError(error.message)
-        errorMessage.value = translatedError
-        return
-      }
-      
-      if (data.session) {
-        session.value = data.session
-        user.value = data.session.user
-        console.log('[useAuth] Sessão encontrada:', data.session.user.email)
-      }
-    } catch (error: any) {
-      console.error('[useAuth] Erro na inicialização:', error)
-      const translatedError = translateError(error.message || 'Erro de inicialização')
-      errorMessage.value = translatedError
-    } finally {
-      isLoading.value = false
-    }
-  }
-
   // Login
   const signInWithEmailAndPassword = async (email: string, password: string) => {
     const client = getSupabase()
@@ -231,7 +202,6 @@ export function useAuth() {
     signInWithEmailAndPassword,
     signUp,
     signOut,
-    initialize,
     sendPasswordResetEmail
   }
 }
