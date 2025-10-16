@@ -2,196 +2,236 @@ import type { Session, User } from '@supabase/supabase-js'
 import { translateError } from '~/utils/errorTranslations'
 
 export function useAuth() {
-  let supabase: ReturnType<typeof useSupabaseClient>
-  
-  try {
-    supabase = useSupabaseClient()
-  } catch (error) {
-    console.error('Erro ao inicializar Supabase:', error)
-    // Return early with empty/error state if Supabase is not available
-    const errorMessage = useState<string | null>('auth_error', () => null)
-    return {
-      user: useState<User | null>('auth_user', () => null),
-      session: useState<Session | null>('auth_session', () => null),
-      isAuthenticated: computed(() => false),
-      isLoading: useState<boolean>('auth_loading', () => false),
-      errorMessage,
-      signInWithEmailAndPassword: async () => { 
-        const translatedError = translateError('Service unavailable')
-        errorMessage.value = translatedError
-        throw new Error('Supabase não disponível') 
-      },
-      signUp: async () => {
-        const translatedError = translateError('Service unavailable')
-        errorMessage.value = translatedError
-        throw new Error('Supabase não disponível')
-      },
-      signOut: async () => { 
-        console.error('Tentativa de logout sem Supabase inicializado')
-      },
-      reloadSession: async () => { 
-        console.error('Tentativa de recarregar sessão sem Supabase inicializado')
-      },
-    }
-  }
-
-  // Usar estados globais que são inicializados pelo plugin
+  // Estados reativos globais
   const user = useState<User | null>('auth_user', () => null)
   const session = useState<Session | null>('auth_session', () => null)
   const isLoading = useState<boolean>('auth_loading', () => false)
   const errorMessage = useState<string | null>('auth_error', () => null)
 
-  async function loadSession() {
-    try {
-      isLoading.value = true
-      const { data, error } = await supabase.auth.getSession()
-      if (error) {
-        errorMessage.value = error.message
-        session.value = null
-        user.value = null
-        return
-      }
-      session.value = data.session
-      user.value = data.session?.user ?? null
-    } catch (error) {
-      console.error('Erro ao carregar sessão:', error)
-      session.value = null
-      user.value = null
-    } finally {
-      isLoading.value = false
-    }
-  }
-
+  // Computed property
   const isAuthenticated = computed(() => {
-    // Força reatividade verificando ambos os valores
-    const hasUser = Boolean(user.value)
-    const hasSession = Boolean(session.value)
-    return hasUser && hasSession
+    return !!user.value && !!session.value
   })
 
-  async function signInWithEmailAndPassword(email: string, password: string) {
-    errorMessage.value = null
-    isLoading.value = true
+  // No servidor, retorna apenas os estados sem lógica de Supabase
+  if (process.server) {
+    return {
+      user: readonly(user),
+      session: readonly(session),
+      isAuthenticated,
+      isLoading: readonly(isLoading),
+      errorMessage: readonly(errorMessage),
+      signInWithEmailAndPassword: async () => { throw new Error('Server-side auth not available') },
+      signUp: async () => { throw new Error('Server-side auth not available') },
+      signOut: async () => { throw new Error('Server-side auth not available') },
+      initialize: async () => {},
+      sendPasswordResetEmail: async () => { throw new Error('Server-side auth not available') }
+    }
+  }
+
+  // Cliente - inicializar Supabase quando necessário
+  let supabase: ReturnType<typeof useSupabaseClient> | null = null
+  
+  const getSupabase = () => {
+    if (!supabase) {
+      try {
+        supabase = useSupabaseClient()
+      } catch (error) {
+        console.error('Erro ao inicializar Supabase:', error)
+        const errorMsg = translateError('Service unavailable')
+        errorMessage.value = errorMsg
+        return null
+      }
+    }
+    return supabase
+  }
+
+  // Função de inicialização
+  const initialize = async () => {
+    const client = getSupabase()
+    if (!client) return
+    
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-      if (error) throw error
+      isLoading.value = true
+      const { data, error } = await client.auth.getSession()
       
-      // Atualizar estado local imediatamente
-      if (data.session && data.user) {
-        console.log('useAuth: Atualizando estado local após login')
-        user.value = data.user
+      if (error) {
+        console.error('[useAuth] Erro ao obter sessão:', error)
+        const translatedError = translateError(error.message)
+        errorMessage.value = translatedError
+        return
+      }
+      
+      if (data.session) {
         session.value = data.session
-        console.log('useAuth: Estado local atualizado:', { 
-          hasUser: !!user.value, 
-          hasSession: !!session.value,
-          email: user.value?.email 
-        })
+        user.value = data.session.user
+        console.log('[useAuth] Sessão encontrada:', data.session.user.email)
       }
-      
-      return data
-    } catch (err: any) {
-      const translatedError = translateError(err?.message ?? 'Erro ao autenticar')
+    } catch (error: any) {
+      console.error('[useAuth] Erro na inicialização:', error)
+      const translatedError = translateError(error.message || 'Erro de inicialização')
       errorMessage.value = translatedError
-      throw err
     } finally {
       isLoading.value = false
     }
   }
 
-  async function signUp(userData: {
-    name: string
-    companyName: string
-    email: string
-    password: string
-  }) {
-    errorMessage.value = null
-    isLoading.value = true
+  // Login
+  const signInWithEmailAndPassword = async (email: string, password: string) => {
+    const client = getSupabase()
+    if (!client) throw new Error('Supabase não disponível')
+    
     try {
-      // 1. Criar usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password
+      isLoading.value = true
+      errorMessage.value = null
+
+      const { data, error } = await client.auth.signInWithPassword({
+        email,
+        password,
       })
 
-      if (authError) throw authError
-
-      if (!authData.user) {
-        throw new Error('Falha ao criar usuário')
+      if (error) {
+        console.error('[useAuth] Erro no login:', error)
+        const translatedError = translateError(error.message)
+        errorMessage.value = translatedError
+        throw new Error(translatedError)
       }
 
-      // 2. Inserir na tabela usuarios
-      const { data: userRecord, error: userError } = await supabase
-        .from('usuarios')
-        .insert({
-          id: authData.user.id, // Usar o mesmo ID do auth
-          nome: userData.name,
-          email: userData.email,
-          perfil: 'admin' // O primeiro usuário da empresa é admin
-        })
-        .select()
-        .single()
+      if (data.session && data.user) {
+        session.value = data.session
+        user.value = data.user
+        console.log('[useAuth] Login realizado com sucesso:', data.user.email)
+        
+        await navigateTo('/', { replace: true })
+      }
 
-      if (userError) throw userError
-
-      // 3. Inserir na tabela empresas
-      const { error: companyError } = await supabase
-        .from('empresas')
-        .insert({
-          usuario_id: authData.user.id,
-          nome: userData.companyName,
-          hora_abertura: '08:00:00', // Horário padrão
-          hora_fechamento: '18:00:00' // Horário padrão
-        })
-
-      if (companyError) throw companyError
-
-      return authData
-    } catch (err: any) {
-      const translatedError = translateError(err?.message ?? 'Erro ao criar conta')
-      errorMessage.value = translatedError
-      throw err
+      return { data, error: null }
+    } catch (error: any) {
+      console.error('[useAuth] Erro no signIn:', error)
+      throw error
     } finally {
       isLoading.value = false
     }
   }
 
-  async function signOut() {
-    errorMessage.value = null
-    isLoading.value = true
+  // Registro
+  const signUp = async (email: string, password: string, nome: string) => {
+    const client = getSupabase()
+    if (!client) throw new Error('Supabase não disponível')
+    
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      isLoading.value = true
+      errorMessage.value = null
+
+      const { data: authData, error: authError } = await client.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { nome }
+        }
+      })
+
+      if (authError) {
+        const translatedError = translateError(authError.message)
+        errorMessage.value = translatedError
+        throw new Error(translatedError)
+      }
+
+      if (authData.user && !authData.session) {
+        // Usuário criado, mas precisa confirmar email
+        return { 
+          data: authData, 
+          error: null,
+          needsEmailConfirmation: true 
+        }
+      }
+
+      if (authData.session && authData.user) {
+        session.value = authData.session
+        user.value = authData.user
+      }
+
+      return { data: authData, error: null }
+    } catch (error: any) {
+      console.error('[useAuth] Erro no signUp:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Logout
+  const signOut = async () => {
+    const client = getSupabase()
+    if (!client) throw new Error('Supabase não disponível')
+    
+    try {
+      isLoading.value = true
       
-      // Limpar estado local
+      const { error } = await client.auth.signOut()
+      
+      if (error) {
+        console.error('[useAuth] Erro no logout:', error)
+        const translatedError = translateError(error.message)
+        errorMessage.value = translatedError
+        throw new Error(translatedError)
+      }
+
+      // Limpar estados
       user.value = null
       session.value = null
-    } catch (err: any) {
-      errorMessage.value = err?.message ?? 'Erro ao sair'
-      throw err
+      
+      // Limpar localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('sb-wynjuzsrydsvkmyhjfhu-auth-token')
+      }
+      
+      console.log('[useAuth] Logout realizado com sucesso')
+      await navigateTo('/login', { replace: true })
+    } catch (error: any) {
+      console.error('[useAuth] Erro no signOut:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Recuperação de senha
+  const sendPasswordResetEmail = async (email: string) => {
+    const client = getSupabase()
+    if (!client) throw new Error('Supabase não disponível')
+    
+    try {
+      isLoading.value = true
+      errorMessage.value = null
+
+      const { error } = await client.auth.resetPasswordForEmail(email)
+
+      if (error) {
+        const translatedError = translateError(error.message)
+        errorMessage.value = translatedError
+        throw new Error(translatedError)
+      }
+
+      return { error: null }
+    } catch (error: any) {
+      console.error('[useAuth] Erro no reset de senha:', error)
+      throw error
     } finally {
       isLoading.value = false
     }
   }
 
   return {
-    // state
-    user,
-    session,
+    user: readonly(user),
+    session: readonly(session),
     isAuthenticated,
-    isLoading,
-    errorMessage,
-
-    // actions
+    isLoading: readonly(isLoading),
+    errorMessage: readonly(errorMessage),
     signInWithEmailAndPassword,
     signUp,
     signOut,
-
-    // helpers
-    reloadSession: loadSession,
+    initialize,
+    sendPasswordResetEmail
   }
 }
-
-
