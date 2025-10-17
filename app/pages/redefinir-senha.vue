@@ -117,8 +117,9 @@ const confirmPasswordError = computed(() => {
 const success = ref(false)
 const errorMsg = ref('')
 
-// ⚡ CAPTURAR TOKENS IMEDIATAMENTE DO HASH (antes de sumir)
+// ⚡ CAPTURAR TOKENS IMEDIATAMENTE (code, access_token, etc)
 let capturedTokens: any = {}
+let capturedCode: string | null = null
 
 if (process.client) {
   console.log('🔥 DEBUG INICIAL:')
@@ -126,6 +127,15 @@ if (process.client) {
   console.log('   Hash:', window.location.hash)
   console.log('   Search (query):', window.location.search)
   
+  // Primeiro, tentar capturar o CODE da query string (fluxo PKCE)
+  const urlParams = new URLSearchParams(window.location.search)
+  capturedCode = urlParams.get('code')
+  
+  if (capturedCode) {
+    console.log('🎯 CODE CAPTURADO DA QUERY STRING:', capturedCode)
+  }
+  
+  // Tentar capturar tokens do hash (caso seja fluxo direto)
   if (window.location.hash) {
     console.log('🔥 CAPTURANDO TOKENS DO HASH:', window.location.hash)
     const hash = window.location.hash.substring(1) // Remove o #
@@ -138,20 +148,21 @@ if (process.client) {
       expires_at: params.get('expires_at')
     }
     
-    console.log('🎯 TOKENS CAPTURADOS:', { 
+    console.log('🎯 TOKENS CAPTURADOS DO HASH:', { 
       hasAccessToken: !!capturedTokens.access_token, 
       hasRefreshToken: !!capturedTokens.refresh_token, 
-      type: capturedTokens.type,
-      rawTokens: capturedTokens
+      type: capturedTokens.type
     })
-  } else {
-    console.log('❌ NENHUM HASH ENCONTRADO NA URL!')
   }
   
-  // Limpar hash da URL para evitar problemas (mas manter os tokens em memória)
+  if (!capturedCode && !capturedTokens.access_token) {
+    console.log('❌ NENHUM CODE OU TOKEN ENCONTRADO NA URL!')
+  }
+  
+  // Limpar URL para evitar problemas (mas manter code/tokens em memória)
   if (window.history.replaceState) {
     window.history.replaceState(null, '', window.location.pathname)
-    console.log('🧹 Hash limpo da URL, tokens salvos em memória')
+    console.log('🧹 URL limpa, code/tokens salvos em memória')
   }
 }
 
@@ -203,6 +214,59 @@ const getTokensFromUrl = () => {
 
 // Verificar se há tokens de recuperação na URL
 onMounted(async () => {
+  console.log('🚀 onMounted iniciado')
+  
+  // Se temos um CODE (fluxo PKCE), trocar por tokens
+  if (capturedCode) {
+    console.log('🔄 Trocando CODE por tokens com Supabase...')
+    
+    try {
+      // Tentar obter cliente Supabase com retries
+      let supabase = getSupabase()
+      let retries = 0
+      const maxRetries = 10
+      
+      while (!supabase && retries < maxRetries) {
+        console.log(`⏳ Aguardando Supabase... tentativa ${retries + 1}/${maxRetries}`)
+        await new Promise(resolve => setTimeout(resolve, 500))
+        supabase = getSupabase()
+        retries++
+      }
+      
+      if (!supabase) {
+        console.error('❌ Supabase não disponível após', maxRetries, 'tentativas')
+        errorMsg.value = 'Erro de inicialização. Use o link do email de recuperação.'
+        return
+      }
+      
+      console.log('✅ Supabase disponível, trocando code por session...')
+      
+      // Trocar o code por uma sessão
+      const { data, error } = await supabase.auth.exchangeCodeForSession(capturedCode)
+      
+      if (error) {
+        console.error('❌ Erro ao trocar code:', error)
+        errorMsg.value = 'Acesso inválido. Use o link do email de recuperação.'
+        return
+      }
+      
+      if (data?.session) {
+        console.log('✅ Sessão obtida com sucesso! Usuário pode redefinir senha.')
+        // Sessão criada - usuário está autenticado e pode redefinir senha
+        return
+      }
+      
+      console.error('❌ Nenhuma sessão retornada')
+      errorMsg.value = 'Erro ao processar link. Solicite nova recuperação.'
+      return
+      
+    } catch (err) {
+      console.error('❌ Erro inesperado ao processar code:', err)
+      errorMsg.value = 'Erro ao processar recuperação. Tente novamente.'
+      return
+    }
+  }
+  
   // Usar tokens capturados imediatamente ou tentar da URL normal
   const { access_token, refresh_token, type } = capturedTokens.access_token ? capturedTokens : getTokensFromUrl()
   
