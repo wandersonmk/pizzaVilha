@@ -176,19 +176,29 @@ export function useAuth() {
       isLoading.value = true
       errorMessage.value = null
 
-      // Determinar URL base (produção ou desenvolvimento)
-      const baseUrl = process.client && window.location.origin 
-        ? window.location.origin 
-        : 'https://pizza-vilha.vercel.app'
+      // URL de redirecionamento fixa para evitar problemas
+      const redirectUrl = 'https://pizza-vilha.vercel.app/redefinir-senha'
+      
+      console.log('[useAuth] Enviando email com redirect para:', redirectUrl)
 
       const { error } = await client.auth.resetPasswordForEmail(email, {
-        redirectTo: `${baseUrl}/redefinir-senha`
+        redirectTo: redirectUrl
       })
 
       if (error) {
-        const translatedError = translateError(error.message)
-        errorMessage.value = translatedError
-        throw new Error(translatedError)
+        console.error('[useAuth] Erro detalhado:', error)
+        
+        let errorMsg = error.message
+        
+        // Tratar erro de rate limit especificamente
+        if (error.status === 429 || error.message?.includes('rate') || error.message?.includes('429')) {
+          errorMsg = 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.'
+        } else {
+          errorMsg = translateError(error.message)
+        }
+        
+        errorMessage.value = errorMsg
+        throw new Error(errorMsg)
       }
 
       return { error: null }
