@@ -117,15 +117,38 @@ const confirmPasswordError = computed(() => {
 const success = ref(false)
 const errorMsg = ref('')
 
+// Função para obter cliente Supabase de forma segura
+const getSupabase = () => {
+  if (process.server) return null
+  
+  try {
+    const nuxtApp = useNuxtApp()
+    return nuxtApp.$supabase || null
+  } catch {
+    return null
+  }
+}
+
 // Verificar se há tokens de recuperação na URL
 onMounted(async () => {
   const route = useRoute()
   const { access_token, refresh_token, type } = route.query
   
+  console.log('Tokens recebidos:', { access_token: !!access_token, refresh_token: !!refresh_token, type })
+  
   if (type === 'recovery' && access_token && refresh_token) {
-    // Tokens de recuperação encontrados, verificar sessão
-    const client = useSupabaseClient()
+    // Aguardar um pouco para garantir que Supabase está disponível
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    const client = getSupabase()
+    if (!client) {
+      errorMsg.value = 'Erro de inicialização. Tente novamente em alguns instantes.'
+      console.error('Cliente Supabase não disponível')
+      return
+    }
+    
     try {
+      console.log('Definindo sessão com tokens...')
       const { data, error } = await client.auth.setSession({
         access_token: access_token as string,
         refresh_token: refresh_token as string
@@ -134,6 +157,8 @@ onMounted(async () => {
       if (error) {
         errorMsg.value = 'Link de recuperação inválido ou expirado'
         console.error('Erro ao definir sessão:', error)
+      } else {
+        console.log('Sessão definida com sucesso:', !!data.session)
       }
     } catch (error) {
       errorMsg.value = 'Erro ao processar link de recuperação'
@@ -152,7 +177,12 @@ const handleSubmit = async () => {
     isLoading.value = true
     errorMsg.value = ''
     
-    const client = useSupabaseClient()
+    const client = getSupabase()
+    if (!client) {
+      throw new Error('Cliente Supabase não disponível')
+    }
+    
+    console.log('Atualizando senha do usuário...')
     
     // Atualizar senha do usuário autenticado
     const { data, error } = await client.auth.updateUser({
@@ -162,6 +192,8 @@ const handleSubmit = async () => {
     if (error) {
       throw new Error(error.message)
     }
+    
+    console.log('Senha atualizada com sucesso')
     
     // Sucesso
     success.value = true
