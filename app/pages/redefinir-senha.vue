@@ -8,7 +8,25 @@
           <p class="text-sm text-foreground/60">Digite sua nova senha abaixo</p>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="mt-6 space-y-3">
+        <!-- Mensagem de erro inicial -->
+        <div v-if="errorMsg && !success" class="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+            <p class="text-sm text-red-400">{{ errorMsg }}</p>
+          </div>
+        </div>
+
+        <!-- Mensagem de sucesso -->
+        <div v-if="success" class="mt-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            <p class="text-sm text-green-400">Senha redefinida com sucesso!</p>
+          </div>
+          <p class="text-xs text-green-400/70 mt-1">Redirecionando para o login...</p>
+        </div>
+
+        <!-- Formulário -->
+        <form v-if="!success && !errorMsg" @submit.prevent="handleSubmit" class="mt-6 space-y-3">
           <div>
             <AppInput
               v-model="newPassword"
@@ -96,8 +114,72 @@ const confirmPasswordError = computed(() => {
   return null
 })
 
+const success = ref(false)
+const errorMsg = ref('')
+
+// Verificar se há tokens de recuperação na URL
+onMounted(async () => {
+  const route = useRoute()
+  const { access_token, refresh_token, type } = route.query
+  
+  if (type === 'recovery' && access_token && refresh_token) {
+    // Tokens de recuperação encontrados, verificar sessão
+    const client = useSupabaseClient()
+    try {
+      const { data, error } = await client.auth.setSession({
+        access_token: access_token as string,
+        refresh_token: refresh_token as string
+      })
+      
+      if (error) {
+        errorMsg.value = 'Link de recuperação inválido ou expirado'
+        console.error('Erro ao definir sessão:', error)
+      }
+    } catch (error) {
+      errorMsg.value = 'Erro ao processar link de recuperação'
+      console.error('Erro:', error)
+    }
+  } else if (!access_token && !type) {
+    // Não há tokens, usuário acessou diretamente
+    errorMsg.value = 'Acesso inválido. Use o link do email de recuperação.'
+  }
+})
+
 const handleSubmit = async () => {
-  // Funcionalidade será implementada posteriormente
-  console.log('Nova senha definida')
+  if (!newPassword.value || !confirmPassword.value || !isPasswordValid.value || !isPasswordConfirmValid.value) return
+  
+  try {
+    isLoading.value = true
+    errorMsg.value = ''
+    
+    const client = useSupabaseClient()
+    
+    // Atualizar senha do usuário autenticado
+    const { data, error } = await client.auth.updateUser({
+      password: newPassword.value
+    })
+    
+    if (error) {
+      throw new Error(error.message)
+    }
+    
+    // Sucesso
+    success.value = true
+    
+    // Limpar campos
+    newPassword.value = ''
+    confirmPassword.value = ''
+    
+    // Redirecionar para login após alguns segundos
+    setTimeout(() => {
+      navigateTo('/login')
+    }, 3000)
+    
+  } catch (error: any) {
+    console.error('Erro ao redefinir senha:', error)
+    errorMsg.value = error.message || 'Erro ao redefinir senha'
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
