@@ -8,7 +8,17 @@
           <p class="text-sm text-foreground/60">Digite seu email para receber as instruções de recuperação</p>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="mt-6 space-y-3">
+        <!-- Mensagem de sucesso -->
+        <div v-if="success" class="mt-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            <p class="text-sm text-green-400">Email enviado com sucesso! Verifique sua caixa de entrada.</p>
+          </div>
+          <p class="text-xs text-green-400/70 mt-1">Redirecionando para o login...</p>
+        </div>
+
+        <!-- Formulário -->
+        <form v-if="!success" @submit.prevent="handleSubmit" class="mt-6 space-y-3">
           <div>
             <AppInput
               v-model="email"
@@ -21,6 +31,11 @@
             <div v-if="emailError" class="text-xs text-red-500 mt-1 px-1">
               {{ emailError }}
             </div>
+          </div>
+
+          <!-- Mensagem de erro -->
+          <div v-if="errorMsg" class="text-xs text-red-500 mt-1 px-1">
+            {{ errorMsg }}
           </div>
 
           <AppButton 
@@ -71,8 +86,35 @@ const emailError = computed(() => {
   return null
 })
 
+const success = ref(false)
+const errorMsg = ref('')
+
 const handleSubmit = async () => {
-  // Funcionalidade será implementada posteriormente
-  console.log('Email para recuperação:', email.value)
+  if (!email.value || !isEmailValid.value) return
+  
+  try {
+    isLoading.value = true
+    errorMsg.value = ''
+    
+    const { sendPasswordResetEmail } = useAuth()
+    await sendPasswordResetEmail(email.value)
+    
+    // Mostrar mensagem de sucesso
+    success.value = true
+    
+    // Limpar o campo
+    email.value = ''
+    
+    // Redirecionar para login após alguns segundos
+    setTimeout(() => {
+      navigateTo('/login')
+    }, 4000)
+    
+  } catch (error: any) {
+    console.error('Erro ao enviar email:', error)
+    errorMsg.value = error.message || 'Erro ao enviar email de recuperação'
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
