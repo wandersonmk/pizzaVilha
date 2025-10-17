@@ -117,6 +117,34 @@ const confirmPasswordError = computed(() => {
 const success = ref(false)
 const errorMsg = ref('')
 
+// ⚡ CAPTURAR TOKENS IMEDIATAMENTE DO HASH (antes de sumir)
+let capturedTokens: any = {}
+
+if (process.client && window.location.hash) {
+  console.log('🔥 CAPTURANDO TOKENS DO HASH IMEDIATAMENTE:', window.location.hash)
+  const hash = window.location.hash.substring(1) // Remove o #
+  const params = new URLSearchParams(hash)
+  
+  capturedTokens = {
+    access_token: params.get('access_token'),
+    refresh_token: params.get('refresh_token'),
+    type: params.get('type'),
+    expires_at: params.get('expires_at')
+  }
+  
+  console.log('🎯 TOKENS CAPTURADOS:', { 
+    hasAccessToken: !!capturedTokens.access_token, 
+    hasRefreshToken: !!capturedTokens.refresh_token, 
+    type: capturedTokens.type 
+  })
+  
+  // Limpar hash da URL para evitar problemas (mas manter os tokens em memória)
+  if (window.history.replaceState) {
+    window.history.replaceState(null, '', window.location.pathname)
+    console.log('🧹 Hash limpo da URL, tokens salvos em memória')
+  }
+}
+
 // Função para obter cliente Supabase de forma segura
 const getSupabase = () => {
   if (process.server) return null
@@ -165,9 +193,15 @@ const getTokensFromUrl = () => {
 
 // Verificar se há tokens de recuperação na URL
 onMounted(async () => {
-  const { access_token, refresh_token, type, expires_at } = getTokensFromUrl()
+  // Usar tokens capturados imediatamente ou tentar da URL normal
+  const { access_token, refresh_token, type } = capturedTokens.access_token ? capturedTokens : getTokensFromUrl()
   
-  console.log('Tokens recebidos:', { access_token: !!access_token, refresh_token: !!refresh_token, type })
+  console.log('🚀 onMounted - Processando tokens:', { 
+    hasAccessToken: !!access_token, 
+    hasRefreshToken: !!refresh_token, 
+    type,
+    source: capturedTokens.access_token ? 'memória' : 'URL'
+  })
   
   if (type === 'recovery' && access_token && refresh_token) {
     // Aguardar inicialização do Supabase com tentativas
