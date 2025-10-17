@@ -140,10 +140,32 @@ const getSupabase = () => {
   }
 }
 
+// Função para extrair tokens da URL (query string ou hash fragment)
+const getTokensFromUrl = () => {
+  const route = useRoute()
+  
+  // Tentar primeiro da query string (?param=value)
+  let { access_token, refresh_token, type, expires_at } = route.query
+  
+  // Se não encontrou na query, tentar no hash fragment (#param=value)
+  if (!access_token && process.client && window.location.hash) {
+    const hash = window.location.hash.substring(1) // Remove o #
+    const params = new URLSearchParams(hash)
+    
+    access_token = params.get('access_token')
+    refresh_token = params.get('refresh_token')
+    type = params.get('type')
+    expires_at = params.get('expires_at')
+    
+    console.log('Tokens extraídos do hash:', { access_token: !!access_token, refresh_token: !!refresh_token, type })
+  }
+  
+  return { access_token, refresh_token, type, expires_at }
+}
+
 // Verificar se há tokens de recuperação na URL
 onMounted(async () => {
-  const route = useRoute()
-  const { access_token, refresh_token, type } = route.query
+  const { access_token, refresh_token, type, expires_at } = getTokensFromUrl()
   
   console.log('Tokens recebidos:', { access_token: !!access_token, refresh_token: !!refresh_token, type })
   
