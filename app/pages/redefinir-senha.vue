@@ -122,9 +122,20 @@ const getSupabase = () => {
   if (process.server) return null
   
   try {
+    // Tentar múltiplas formas de obter o cliente
     const nuxtApp = useNuxtApp()
-    return nuxtApp.$supabase || null
-  } catch {
+    if (nuxtApp.$supabase) {
+      return nuxtApp.$supabase
+    }
+    
+    // Fallback para useSupabaseClient se disponível
+    if (typeof useSupabaseClient === 'function') {
+      return useSupabaseClient()
+    }
+    
+    return null
+  } catch (error) {
+    console.error('Erro ao obter Supabase client:', error)
     return null
   }
 }
