@@ -120,23 +120,33 @@ const errorMsg = ref('')
 // ⚡ CAPTURAR TOKENS IMEDIATAMENTE DO HASH (antes de sumir)
 let capturedTokens: any = {}
 
-if (process.client && window.location.hash) {
-  console.log('🔥 CAPTURANDO TOKENS DO HASH IMEDIATAMENTE:', window.location.hash)
-  const hash = window.location.hash.substring(1) // Remove o #
-  const params = new URLSearchParams(hash)
+if (process.client) {
+  console.log('🔥 DEBUG INICIAL:')
+  console.log('   URL completa:', window.location.href)
+  console.log('   Hash:', window.location.hash)
+  console.log('   Search (query):', window.location.search)
   
-  capturedTokens = {
-    access_token: params.get('access_token'),
-    refresh_token: params.get('refresh_token'),
-    type: params.get('type'),
-    expires_at: params.get('expires_at')
+  if (window.location.hash) {
+    console.log('🔥 CAPTURANDO TOKENS DO HASH:', window.location.hash)
+    const hash = window.location.hash.substring(1) // Remove o #
+    const params = new URLSearchParams(hash)
+    
+    capturedTokens = {
+      access_token: params.get('access_token'),
+      refresh_token: params.get('refresh_token'),
+      type: params.get('type'),
+      expires_at: params.get('expires_at')
+    }
+    
+    console.log('🎯 TOKENS CAPTURADOS:', { 
+      hasAccessToken: !!capturedTokens.access_token, 
+      hasRefreshToken: !!capturedTokens.refresh_token, 
+      type: capturedTokens.type,
+      rawTokens: capturedTokens
+    })
+  } else {
+    console.log('❌ NENHUM HASH ENCONTRADO NA URL!')
   }
-  
-  console.log('🎯 TOKENS CAPTURADOS:', { 
-    hasAccessToken: !!capturedTokens.access_token, 
-    hasRefreshToken: !!capturedTokens.refresh_token, 
-    type: capturedTokens.type 
-  })
   
   // Limpar hash da URL para evitar problemas (mas manter os tokens em memória)
   if (window.history.replaceState) {
