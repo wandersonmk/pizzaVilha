@@ -176,7 +176,14 @@ export function useAuth() {
       isLoading.value = true
       errorMessage.value = null
 
-      const { error } = await client.auth.resetPasswordForEmail(email)
+      // Determinar URL base (produção ou desenvolvimento)
+      const baseUrl = process.client && window.location.origin 
+        ? window.location.origin 
+        : 'https://pizza-vilha.vercel.app'
+
+      const { error } = await client.auth.resetPasswordForEmail(email, {
+        redirectTo: `${baseUrl}/redefinir-senha`
+      })
 
       if (error) {
         const translatedError = translateError(error.message)
