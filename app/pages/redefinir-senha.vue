@@ -26,7 +26,7 @@
         </div>
 
         <!-- Formulário -->
-        <form v-if="!success && !errorMsg" @submit.prevent="handleSubmit" class="mt-6 space-y-3">
+        <form v-if="!success && (!errorMsg || errorMsg.includes('Erro de inicialização'))" @submit.prevent="handleSubmit" class="mt-6 space-y-3">
           <div>
             <AppInput
               v-model="newPassword"
@@ -148,13 +148,23 @@ onMounted(async () => {
   console.log('Tokens recebidos:', { access_token: !!access_token, refresh_token: !!refresh_token, type })
   
   if (type === 'recovery' && access_token && refresh_token) {
-    // Aguardar um pouco para garantir que Supabase está disponível
-    await new Promise(resolve => setTimeout(resolve, 500))
+    // Aguardar inicialização do Supabase com tentativas
+    let client = null
+    let attempts = 0
+    const maxAttempts = 10
     
-    const client = getSupabase()
+    while (!client && attempts < maxAttempts) {
+      client = getSupabase()
+      if (!client) {
+        console.log(`Aguardando Supabase... tentativa ${attempts + 1}`)
+        await new Promise(resolve => setTimeout(resolve, 300))
+        attempts++
+      }
+    }
+    
     if (!client) {
-      errorMsg.value = 'Erro de inicialização. Tente novamente em alguns instantes.'
-      console.error('Cliente Supabase não disponível')
+      errorMsg.value = 'Erro de inicialização. Recarregue a página.'
+      console.error('Cliente Supabase não disponível após', maxAttempts, 'tentativas')
       return
     }
     
@@ -170,6 +180,8 @@ onMounted(async () => {
         console.error('Erro ao definir sessão:', error)
       } else {
         console.log('Sessão definida com sucesso:', !!data.session)
+        // Limpar erro se houver sucesso
+        errorMsg.value = ''
       }
     } catch (error) {
       errorMsg.value = 'Erro ao processar link de recuperação'
