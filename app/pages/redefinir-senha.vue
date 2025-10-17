@@ -239,19 +239,22 @@ onMounted(async () => {
         return
       }
       
-      console.log('✅ Supabase disponível, trocando code por session...')
+      console.log('✅ Supabase disponível, verificando code de recuperação...')
       
-      // Trocar o code por uma sessão
-      const { data, error } = await supabase.auth.exchangeCodeForSession(capturedCode)
+      // Verificar o token de recuperação de senha (OTP)
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: capturedCode,
+        type: 'recovery'
+      })
       
       if (error) {
-        console.error('❌ Erro ao trocar code:', error)
-        errorMsg.value = 'Acesso inválido. Use o link do email de recuperação.'
+        console.error('❌ Erro ao verificar code:', error)
+        errorMsg.value = 'Link inválido ou expirado. Solicite nova recuperação.'
         return
       }
       
-      if (data?.session) {
-        console.log('✅ Sessão obtida com sucesso! Usuário pode redefinir senha.')
+      if (data?.session || data?.user) {
+        console.log('✅ Code verificado com sucesso! Usuário pode redefinir senha.')
         // Sessão criada - usuário está autenticado e pode redefinir senha
         return
       }
