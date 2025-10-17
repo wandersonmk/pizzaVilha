@@ -181,9 +181,11 @@ export function useAuth() {
       
       console.log('[useAuth] Enviando email com redirect para:', redirectUrl)
 
-      const { error } = await client.auth.resetPasswordForEmail(email, {
+      const { data, error } = await client.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       })
+      
+      console.log('[useAuth] Resposta do reset:', { data, error })
 
       if (error) {
         console.error('[useAuth] Erro detalhado:', error)
