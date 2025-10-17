@@ -94,6 +94,8 @@ export function useAuth() {
       isLoading.value = true
       errorMessage.value = null
 
+      console.log('[useAuth] Iniciando signUp para:', email)
+      
       const { data: authData, error: authError } = await client.auth.signUp({
         email,
         password,
@@ -102,7 +104,14 @@ export function useAuth() {
         }
       })
 
+      console.log('[useAuth] Resultado do signUp:', { 
+        user: !!authData?.user, 
+        session: !!authData?.session, 
+        error: authError?.message 
+      })
+
       if (authError) {
+        console.error('[useAuth] Erro detalhado do signUp:', authError)
         const translatedError = translateError(authError.message)
         errorMessage.value = translatedError
         throw new Error(translatedError)
