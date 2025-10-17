@@ -117,212 +117,69 @@ const confirmPasswordError = computed(() => {
 const success = ref(false)
 const errorMsg = ref('')
 
-// ⚡ CAPTURAR TOKENS IMEDIATAMENTE (code, access_token, etc)
-let capturedTokens: any = {}
-let capturedCode: string | null = null
-
+// Simplesmente verificar se o usuário está autenticado
+// O Supabase já processa o link automaticamente quando ele é clicado
 if (process.client) {
-  console.log('🔥 DEBUG INICIAL:')
-  console.log('   URL completa:', window.location.href)
-  console.log('   Hash:', window.location.hash)
-  console.log('   Search (query):', window.location.search)
-  
-  // Primeiro, tentar capturar o CODE da query string (fluxo PKCE)
-  const urlParams = new URLSearchParams(window.location.search)
-  capturedCode = urlParams.get('code')
-  
-  if (capturedCode) {
-    console.log('🎯 CODE CAPTURADO DA QUERY STRING:', capturedCode)
-  }
-  
-  // Tentar capturar tokens do hash (caso seja fluxo direto)
-  if (window.location.hash) {
-    console.log('🔥 CAPTURANDO TOKENS DO HASH:', window.location.hash)
-    const hash = window.location.hash.substring(1) // Remove o #
-    const params = new URLSearchParams(hash)
-    
-    capturedTokens = {
-      access_token: params.get('access_token'),
-      refresh_token: params.get('refresh_token'),
-      type: params.get('type'),
-      expires_at: params.get('expires_at')
-    }
-    
-    console.log('🎯 TOKENS CAPTURADOS DO HASH:', { 
-      hasAccessToken: !!capturedTokens.access_token, 
-      hasRefreshToken: !!capturedTokens.refresh_token, 
-      type: capturedTokens.type
-    })
-  }
-  
-  if (!capturedCode && !capturedTokens.access_token) {
-    console.log('❌ NENHUM CODE OU TOKEN ENCONTRADO NA URL!')
-  }
-  
-  // Limpar URL para evitar problemas (mas manter code/tokens em memória)
-  if (window.history.replaceState) {
-    window.history.replaceState(null, '', window.location.pathname)
-    console.log('🧹 URL limpa, code/tokens salvos em memória')
-  }
+  console.log('🔥 Página de redefinição carregada')
+  console.log('   URL:', window.location.href)
 }
 
-// Função para obter cliente Supabase de forma segura
+// Função para obter cliente Supabase
 const getSupabase = () => {
   if (process.server) return null
   
   try {
-    // Tentar múltiplas formas de obter o cliente
     const nuxtApp = useNuxtApp()
-    if (nuxtApp.$supabase) {
-      return nuxtApp.$supabase
-    }
-    
-    // Fallback para useSupabaseClient se disponível
-    if (typeof useSupabaseClient === 'function') {
-      return useSupabaseClient()
-    }
-    
-    return null
+    return nuxtApp.$supabase || null
   } catch (error) {
-    console.error('Erro ao obter Supabase client:', error)
+    console.error('Erro ao obter Supabase:', error)
     return null
   }
 }
 
-// Função para extrair tokens da URL (query string ou hash fragment)
-const getTokensFromUrl = () => {
-  const route = useRoute()
-  
-  // Tentar primeiro da query string (?param=value)
-  let { access_token, refresh_token, type, expires_at } = route.query
-  
-  // Se não encontrou na query, tentar no hash fragment (#param=value)
-  if (!access_token && process.client && window.location.hash) {
-    const hash = window.location.hash.substring(1) // Remove o #
-    const params = new URLSearchParams(hash)
-    
-    access_token = params.get('access_token')
-    refresh_token = params.get('refresh_token')
-    type = params.get('type')
-    expires_at = params.get('expires_at')
-    
-    console.log('Tokens extraídos do hash:', { access_token: !!access_token, refresh_token: !!refresh_token, type })
-  }
-  
-  return { access_token, refresh_token, type, expires_at }
-}
-
-// Verificar se há tokens de recuperação na URL
+// Verificar autenticação quando a página carregar
 onMounted(async () => {
-  console.log('🚀 onMounted iniciado')
+  console.log('🚀 Verificando autenticação...')
   
-  // Se temos um CODE (fluxo PKCE), trocar por tokens
-  if (capturedCode) {
-    console.log('🔄 Trocando CODE por tokens com Supabase...')
+  try {
+    // Aguardar Supabase estar pronto
+    let supabase = getSupabase()
+    let retries = 0
     
-    try {
-      // Tentar obter cliente Supabase com retries
-      let supabase = getSupabase()
-      let retries = 0
-      const maxRetries = 10
-      
-      while (!supabase && retries < maxRetries) {
-        console.log(`⏳ Aguardando Supabase... tentativa ${retries + 1}/${maxRetries}`)
-        await new Promise(resolve => setTimeout(resolve, 500))
-        supabase = getSupabase()
-        retries++
-      }
-      
-      if (!supabase) {
-        console.error('❌ Supabase não disponível após', maxRetries, 'tentativas')
-        errorMsg.value = 'Erro de inicialização. Use o link do email de recuperação.'
-        return
-      }
-      
-      console.log('✅ Supabase disponível, verificando code de recuperação...')
-      
-      // Verificar o token de recuperação de senha (OTP)
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: capturedCode,
-        type: 'recovery'
-      })
-      
-      if (error) {
-        console.error('❌ Erro ao verificar code:', error)
-        errorMsg.value = 'Link inválido ou expirado. Solicite nova recuperação.'
-        return
-      }
-      
-      if (data?.session || data?.user) {
-        console.log('✅ Code verificado com sucesso! Usuário pode redefinir senha.')
-        // Sessão criada - usuário está autenticado e pode redefinir senha
-        return
-      }
-      
-      console.error('❌ Nenhuma sessão retornada')
-      errorMsg.value = 'Erro ao processar link. Solicite nova recuperação.'
-      return
-      
-    } catch (err) {
-      console.error('❌ Erro inesperado ao processar code:', err)
-      errorMsg.value = 'Erro ao processar recuperação. Tente novamente.'
-      return
-    }
-  }
-  
-  // Usar tokens capturados imediatamente ou tentar da URL normal
-  const { access_token, refresh_token, type } = capturedTokens.access_token ? capturedTokens : getTokensFromUrl()
-  
-  console.log('🚀 onMounted - Processando tokens:', { 
-    hasAccessToken: !!access_token, 
-    hasRefreshToken: !!refresh_token, 
-    type,
-    source: capturedTokens.access_token ? 'memória' : 'URL'
-  })
-  
-  if (type === 'recovery' && access_token && refresh_token) {
-    // Aguardar inicialização do Supabase com tentativas
-    let client = null
-    let attempts = 0
-    const maxAttempts = 10
-    
-    while (!client && attempts < maxAttempts) {
-      client = getSupabase()
-      if (!client) {
-        console.log(`Aguardando Supabase... tentativa ${attempts + 1}`)
-        await new Promise(resolve => setTimeout(resolve, 300))
-        attempts++
-      }
+    while (!supabase && retries < 10) {
+      await new Promise(resolve => setTimeout(resolve, 300))
+      supabase = getSupabase()
+      retries++
     }
     
-    if (!client) {
-      errorMsg.value = 'Erro de inicialização. Recarregue a página.'
-      console.error('Cliente Supabase não disponível após', maxAttempts, 'tentativas')
+    if (!supabase) {
+      console.error('❌ Supabase não disponível')
+      errorMsg.value = 'Erro ao carregar. Tente novamente.'
       return
     }
     
-    try {
-      console.log('Definindo sessão com tokens...')
-      const { data, error } = await client.auth.setSession({
-        access_token: access_token as string,
-        refresh_token: refresh_token as string
-      })
-      
-      if (error) {
-        errorMsg.value = 'Link de recuperação inválido ou expirado'
-        console.error('Erro ao definir sessão:', error)
-      } else {
-        console.log('Sessão definida com sucesso:', !!data.session)
-        // Limpar erro se houver sucesso
-        errorMsg.value = ''
-      }
-    } catch (error) {
-      errorMsg.value = 'Erro ao processar link de recuperação'
-      console.error('Erro:', error)
+    // Verificar se usuário está autenticado
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    if (error) {
+      console.error('❌ Erro ao verificar sessão:', error)
+      errorMsg.value = 'Erro ao verificar acesso.'
+      return
     }
-  } else if (!access_token && !type) {
-    // Não há tokens, usuário acessou diretamente
-    errorMsg.value = 'Acesso inválido. Use o link do email de recuperação.'
+    
+    if (session?.user) {
+      console.log('✅ Usuário autenticado! Pode redefinir senha.')
+      console.log('   User ID:', session.user.id)
+      // Usuário está autenticado, pode redefinir senha
+      // O formulário já está visível
+    } else {
+      console.log('❌ Usuário não autenticado')
+      errorMsg.value = 'Acesso inválido. Use o link do email de recuperação.'
+    }
+    
+  } catch (err) {
+    console.error('❌ Erro:', err)
+    errorMsg.value = 'Erro inesperado. Tente novamente.'
   }
 })
 
