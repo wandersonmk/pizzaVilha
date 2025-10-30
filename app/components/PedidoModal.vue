@@ -256,7 +256,19 @@ const getPaymentColor = (payment: string) => {
 }
 
 const printPedido = () => {
-  if (!props.pedido) return
+  if (!props.pedido) {
+    console.error('Nenhum pedido selecionado para imprimir')
+    return
+  }
+  
+  // Debug: Verificar dados do pedido
+  console.log('Imprimindo pedido:', {
+    numero: props.pedido.numero,
+    cliente: props.pedido.cliente,
+    telefone: props.pedido.telefone,
+    items: props.pedido.items,
+    total: props.pedido.total
+  })
   
   // Criar janela de impressão
   const printWindow = window.open('', '_blank', 'width=300,height=600')
