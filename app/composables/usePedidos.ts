@@ -51,6 +51,27 @@ export const usePedidos = () => {
   // ID da empresa (por enquanto usando um ID fixo, depois integrar com useEmpresa)
   const empresaId = '75bd85cf-1997-48e2-9367-e554b01a2283'
 
+  // Função para formatar telefone para visualização
+  const formatTelefone = (telefone: string): string => {
+    // Remove todos os caracteres não numéricos
+    const numbers = telefone.replace(/\D/g, '')
+    
+    // Se começar com 55 (código do Brasil), remove
+    const cleanNumber = numbers.startsWith('55') ? numbers.substring(2) : numbers
+    
+    // Formata conforme o padrão brasileiro
+    if (cleanNumber.length === 11) {
+      // Celular: (11) 91234-5678
+      return `(${cleanNumber.substring(0, 2)}) ${cleanNumber.substring(2, 7)}-${cleanNumber.substring(7)}`
+    } else if (cleanNumber.length === 10) {
+      // Fixo: (11) 1234-5678
+      return `(${cleanNumber.substring(0, 2)}) ${cleanNumber.substring(2, 6)}-${cleanNumber.substring(6)}`
+    }
+    
+    // Se não conseguir formatar, retorna o original
+    return telefone
+  }
+
   // Função para converter pedido do Supabase para o formato da interface
   const convertSupabasePedido = (pedidoSupabase: PedidoSupabase): Pedido => {
     // Parse do campo "pedido" para extrair itens (formato: "2x Pizza Margherita Grande, 1x Refrigerante 2L")
@@ -82,7 +103,7 @@ export const usePedidos = () => {
       id: pedidoSupabase.id,
       numero: pedidoSupabase.numero_pedido,
       cliente: pedidoSupabase.nome_cliente,
-      telefone: pedidoSupabase.telefone_cliente,
+      telefone: formatTelefone(pedidoSupabase.telefone_cliente),
       endereco: pedidoSupabase.endereco_entrega || undefined,
       items,
       total: parseFloat(pedidoSupabase.valor_total) + parseFloat(pedidoSupabase.valor_entrega || '0'),
@@ -250,6 +271,7 @@ export const usePedidos = () => {
     createPedido,
     getPedidosByStatus,
     getOrderCountByStatus,
-    setupRealtimeSubscription
+    setupRealtimeSubscription,
+    formatTelefone
   }
 }
