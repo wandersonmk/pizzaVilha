@@ -131,17 +131,16 @@
           <!-- Botões de mudança de status -->
           <template v-if="pedido?.status === 'novo'">
             <button
-              @click="updateStatus('cozinha')"
-              class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              @click="alert('🔴 CLIQUE DETECTADO!')"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              <font-awesome-icon icon="check" class="w-4 h-4 mr-2" />
-              Aceitar Pedido
+              ✅ Aceitar Pedido (TESTE)
             </button>
           </template>
           
           <template v-else-if="pedido?.status === 'cozinha'">
             <button
-              @click="updateStatus(pedido.tipoEntrega === 'entrega' ? 'entrega' : 'concluido')"
+              @click="updateStatusDirectly(pedido.tipoEntrega === 'entrega' ? 'entrega' : 'concluido')"
               class="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               <font-awesome-icon icon="utensils" class="w-4 h-4 mr-2" />
@@ -151,7 +150,7 @@
           
           <template v-else-if="pedido?.status === 'entrega'">
             <button
-              @click="updateStatus('concluido')"
+              @click="updateStatusDirectly('concluido')"
               class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               <font-awesome-icon icon="check-circle" class="w-4 h-4 mr-2" />
@@ -174,6 +173,8 @@
 </template>
 
 <script setup lang="ts">
+import { usePedidos } from '~/composables/usePedidos'
+
 interface PedidoItem {
   nome: string
   quantidade: number
@@ -211,9 +212,55 @@ const emit = defineEmits<{
   'update-status': [pedidoId: string, status: string]
 }>()
 
+// Função que atualiza e força recarga
+const updateStatusDirectly = async (newStatus: string) => {
+  if (!props.pedido) {
+    alert('❌ Pedido não encontrado')
+    return
+  }
+
+  try {
+    console.log(`🔄 Atualizando pedido ${props.pedido.id} de "${props.pedido.status}" para "${newStatus}"`)
+    
+    // Usar o cliente Supabase diretamente
+    const supabase = useSupabaseClient()
+    
+    // Atualizar no banco
+    const { data, error } = await supabase
+      .from('pedidos')
+      .update({ status: newStatus })
+      .eq('id', props.pedido.id)
+      .select()
+
+    if (error) {
+      throw error
+    }
+
+    console.log('✅ Pedido atualizado:', data)
+    alert(`✅ Status atualizado para: ${newStatus}`)
+    
+    // Fechar modal
+    emit('close')
+    
+    // Recarregar página para garantir sincronização
+    window.location.reload()
+    
+  } catch (error) {
+    console.error('💥 Erro:', error)
+    alert(`❌ Erro: ${error.message || 'Erro desconhecido'}`)
+  }
+}
+
 const updateStatus = (newStatus: string) => {
+  alert(`🔥 MODAL: Botão clicado! Status: ${newStatus}`)
+  console.log(`[PedidoModal] updateStatus chamado: ${newStatus}`, props.pedido)
+  
   if (props.pedido) {
+    console.log(`[PedidoModal] Emitindo evento update-status: ${props.pedido.id} -> ${newStatus}`)
     emit('update-status', props.pedido.id, newStatus)
+    alert(`📡 MODAL: Evento emitido! ${props.pedido.id} -> ${newStatus}`)
+  } else {
+    console.error('[PedidoModal] Nenhum pedido encontrado para atualizar')
   }
 }
 

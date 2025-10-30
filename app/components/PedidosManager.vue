@@ -166,6 +166,13 @@ const {
   setupRealtimeSubscription
 } = usePedidos()
 
+// Debug: Verificar se as funções foram carregadas
+console.log('[PedidosManager] Funções do composable:', {
+  fetchPedidos: !!fetchPedidos,
+  updatePedidoStatus: !!updatePedidoStatus,
+  getPedidosByStatus: !!getPedidosByStatus
+})
+
 // Tipos já definidos no composable
 interface PedidoItem {
   nome: string
@@ -207,8 +214,10 @@ const statusFilters = [
 
 // Inicializar dados e real-time quando component montar
 onMounted(async () => {
+  console.log('[PedidosManager] Componente montado, inicializando...')
   await fetchPedidos()
   setupRealtimeSubscription()
+  console.log('[PedidosManager] Inicialização concluída')
 })
 
 // Mostrar erro se houver
@@ -234,34 +243,28 @@ const closeModal = () => {
   selectedPedido.value = null
 }
 
-const acceptOrder = (pedidoId: string) => {
+const acceptOrder = async (pedidoId: string) => {
+  await updateOrderStatus(pedidoId, 'cozinha')
+}
+
+const markAsReady = async (pedidoId: string) => {
   const pedido = pedidos.value.find(p => p.id === pedidoId)
   if (pedido) {
-    pedido.status = 'cozinha'
-    // Aqui você adicionaria a lógica para notificar a cozinha
-    console.log(`Pedido ${pedido.numero} enviado para cozinha`)
+    const nextStatus = pedido.tipoEntrega === 'entrega' ? 'entrega' : 'concluido'
+    await updateOrderStatus(pedidoId, nextStatus)
   }
 }
 
-const markAsReady = (pedidoId: string) => {
-  const pedido = pedidos.value.find(p => p.id === pedidoId)
-  if (pedido) {
-    pedido.status = pedido.tipoEntrega === 'entrega' ? 'entrega' : 'concluido'
-    console.log(`Pedido ${pedido.numero} pronto${pedido.tipoEntrega === 'entrega' ? ' - saiu para entrega' : ' - concluído'}`)
-  }
-}
-
-const completeOrder = (pedidoId: string) => {
-  const pedido = pedidos.value.find(p => p.id === pedidoId)
-  if (pedido) {
-    pedido.status = 'concluido'
-    console.log(`Pedido ${pedido.numero} concluído`)
-  }
+const completeOrder = async (pedidoId: string) => {
+  await updateOrderStatus(pedidoId, 'concluido')
 }
 
 const updateOrderStatus = async (pedidoId: string, newStatus: string) => {
   const pedido = pedidos.value.find(p => p.id === pedidoId)
-  if (!pedido) return
+  if (!pedido) {
+    console.error(`[PedidosManager] Pedido não encontrado: ${pedidoId}`)
+    return
+  }
 
   // Atualizar no Supabase
   const success = await updatePedidoStatus(pedidoId, newStatus)

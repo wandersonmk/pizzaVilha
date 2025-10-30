@@ -149,28 +149,63 @@ export const usePedidos = () => {
     }
   }
 
+  // Teste de conexão com Supabase
+  const testSupabaseConnection = async () => {
+    console.log('[TEST] Testando conexão com Supabase...')
+    try {
+      const { data, error } = await supabase
+        .from('pedidos')
+        .select('id, nome_cliente, status')
+        .limit(1)
+      
+      if (error) {
+        console.error('[TEST] Erro na conexão:', error)
+        return false
+      }
+      
+      console.log('[TEST] Conexão OK, dados:', data)
+      return true
+    } catch (err) {
+      console.error('[TEST] Erro de conexão:', err)
+      return false
+    }
+  }
+
   // Atualizar status do pedido
   const updatePedidoStatus = async (pedidoId: string, novoStatus: string) => {
+    console.log(`🔥 [usePedidos] ENTRADA NA FUNÇÃO! updatePedidoStatus: ${pedidoId} -> ${novoStatus}`)
+    
     try {
-      const { error: supabaseError } = await supabase
+      console.log('📡 [usePedidos] Executando update direto no Supabase...')
+      
+      // Fazer update direto, sem teste de conexão
+      const { data, error: supabaseError } = await supabase
         .from('pedidos')
         .update({ status: novoStatus })
         .eq('id', pedidoId)
+        .select()
 
       if (supabaseError) {
+        console.error('❌ [usePedidos] Erro do Supabase:', supabaseError)
         throw supabaseError
       }
+
+      console.log('✅ [usePedidos] SUCESSO! Pedido atualizado no banco:', data)
 
       // Atualizar localmente
       const pedido = pedidos.value.find(p => p.id === pedidoId)
       if (pedido) {
+        const oldStatus = pedido.status
         pedido.status = novoStatus as any
+        console.log(`🔄 [usePedidos] Status atualizado localmente: ${oldStatus} -> ${novoStatus}`, pedido)
+      } else {
+        console.error('⚠️ [usePedidos] Pedido não encontrado na lista local:', pedidoId)
       }
 
       return true
     } catch (err: any) {
       error.value = err.message || 'Erro ao atualizar pedido'
-      console.error('Erro ao atualizar status do pedido:', err)
+      console.error('💥 [usePedidos] ERRO COMPLETO:', err)
       return false
     }
   }
@@ -272,6 +307,7 @@ export const usePedidos = () => {
     getPedidosByStatus,
     getOrderCountByStatus,
     setupRealtimeSubscription,
-    formatTelefone
+    formatTelefone,
+    testSupabaseConnection
   }
 }
