@@ -163,7 +163,8 @@ const {
   updatePedidoStatus,
   getPedidosByStatus,
   getOrderCountByStatus,
-  setupRealtimeSubscription
+  setupRealtimeSubscription,
+  stopNotification
 } = usePedidos()
 
 // Debug: Verificar se as funções foram carregadas
@@ -244,6 +245,7 @@ const closeModal = () => {
 }
 
 const acceptOrder = async (pedidoId: string) => {
+  stopNotification() // Parar o som quando aceitar
   await updateOrderStatus(pedidoId, 'cozinha')
 }
 

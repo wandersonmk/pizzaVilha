@@ -43,6 +43,7 @@ interface Pedido {
 export const usePedidos = () => {
   const supabase = useSupabaseClient()
   const { user } = useAuth()
+  const { playNotification, stopNotification } = useNotificationSound()
 
   const pedidos = ref<Pedido[]>([])
   const isLoading = ref(false)
@@ -50,6 +51,9 @@ export const usePedidos = () => {
 
   // ID da empresa (por enquanto usando um ID fixo, depois integrar com useEmpresa)
   const empresaId = '75bd85cf-1997-48e2-9367-e554b01a2283'
+  
+  // Rastrear pedidos anteriores para detectar novos
+  let previousPedidosCount = 0
 
   // Função para formatar telefone para visualização
   const formatTelefone = (telefone: string): string => {
@@ -139,7 +143,19 @@ export const usePedidos = () => {
       }
 
       if (data) {
-        pedidos.value = data.map(convertSupabasePedido)
+        const novosPedidos = data.map(convertSupabasePedido)
+        
+        // Verificar se há novos pedidos com status "novo"
+        const novosCount = novosPedidos.filter(p => p.status === 'novo').length
+        const previousNovosCount = pedidos.value.filter(p => p.status === 'novo').length
+        
+        // Tocar notificação se houver mais pedidos "novo" do que antes (e não é a primeira carga)
+        if (pedidos.value.length > 0 && novosCount > previousNovosCount) {
+          console.log(`🔔 [Notificação] Novo pedido detectado! Antes: ${previousNovosCount}, Agora: ${novosCount}`)
+          playNotification()
+        }
+        
+        pedidos.value = novosPedidos
       }
     } catch (err: any) {
       error.value = err.message || 'Erro ao buscar pedidos'
@@ -356,6 +372,7 @@ export const usePedidos = () => {
     setupRealtimeSubscription,
     startPolling,
     stopPolling,
+    stopNotification, // Exportar para parar o som manualmente
     formatTelefone,
     testSupabaseConnection
   }
