@@ -259,8 +259,35 @@ export const usePedidos = () => {
   }
 
   // Real-time subscription
+  // Polling para simular real-time quando Supabase Realtime não está habilitado
+  let pollingInterval: NodeJS.Timeout | null = null
+
+  const startPolling = (intervalMs: number = 30000) => { // 30 segundos por padrão
+    if (pollingInterval) return // Já está rodando
+
+    console.log(`[Polling] Iniciando atualização automática a cada ${intervalMs / 1000}s`)
+    
+    pollingInterval = setInterval(async () => {
+      console.log('[Polling] Buscando atualizações...')
+      await fetchPedidos()
+    }, intervalMs)
+  }
+
+  const stopPolling = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      pollingInterval = null
+      console.log('[Polling] Atualização automática parada')
+    }
+  }
+
   const setupRealtimeSubscription = () => {
-    if (!empresaId) return
+    if (!empresaId) {
+      console.log('[Real-time] Empresa ID não encontrado')
+      return
+    }
+
+    console.log('[Real-time] Tentando configurar Supabase Realtime...')
 
     const subscription = supabase
       .channel('pedidos_changes')
@@ -273,26 +300,46 @@ export const usePedidos = () => {
           filter: `empresa_id=eq.${empresaId}`
         },
         (payload) => {
-          console.log('Pedidos real-time update:', payload)
+          console.log('✅ [Real-time] Atualização recebida:', payload.eventType, payload)
           
           if (payload.eventType === 'INSERT' && payload.new) {
             const novoPedido = convertSupabasePedido(payload.new as PedidoSupabase)
             pedidos.value.unshift(novoPedido)
+            console.log('✅ [Real-time] Novo pedido adicionado:', novoPedido)
           } else if (payload.eventType === 'UPDATE' && payload.new) {
             const pedidoAtualizado = convertSupabasePedido(payload.new as PedidoSupabase)
             const index = pedidos.value.findIndex(p => p.id === pedidoAtualizado.id)
             if (index !== -1) {
               pedidos.value[index] = pedidoAtualizado
+              console.log('✅ [Real-time] Pedido atualizado:', pedidoAtualizado)
             }
           } else if (payload.eventType === 'DELETE' && payload.old) {
             const index = pedidos.value.findIndex(p => p.id === payload.old.id)
             if (index !== -1) {
               pedidos.value.splice(index, 1)
+              console.log('✅ [Real-time] Pedido removido:', payload.old.id)
             }
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('[Real-time] Status da subscription:', status)
+        
+        // Se não conseguir conectar ao Realtime, usar polling como fallback
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.log('[Real-time] Falha ao conectar, usando polling como alternativa')
+          startPolling(30000) // Atualizar a cada 30 segundos
+        } else if (status === 'SUBSCRIBED') {
+          console.log('[Real-time] Conectado com sucesso!')
+          stopPolling() // Parar polling se Realtime funcionar
+        }
+      })
+
+    // Iniciar polling por padrão após 3 segundos se não houver resposta do Realtime
+    setTimeout(() => {
+      console.log('[Real-time] Iniciando polling como fallback...')
+      startPolling(30000) // 30 segundos
+    }, 3000)
 
     return subscription
   }
@@ -307,6 +354,8 @@ export const usePedidos = () => {
     getPedidosByStatus,
     getOrderCountByStatus,
     setupRealtimeSubscription,
+    startPolling,
+    stopPolling,
     formatTelefone,
     testSupabaseConnection
   }
