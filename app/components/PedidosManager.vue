@@ -1,5 +1,29 @@
 <template>
   <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Loading State -->
+    <div v-if="pedidosLoading" class="flex items-center justify-center py-12">
+      <div class="text-center space-y-4">
+        <CircularProgress />
+        <p class="text-muted-foreground">Carregando pedidos...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="pedidosError" class="flex items-center justify-center py-12">
+      <div class="text-center space-y-4">
+        <div class="text-red-500 text-xl">⚠️</div>
+        <p class="text-red-600">{{ pedidosError }}</p>
+        <button 
+          @click="fetchPedidos" 
+          class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+        >
+          Tentar Novamente
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div v-else>
     <!-- Header com filtros e estatísticas rápidas -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div class="flex gap-2">
@@ -123,12 +147,26 @@
       @close="closeModal"
       @update-status="updateOrderStatus"
     />
+    </div> <!-- Fecha div do content -->
   </div>
 </template>
 
 <script setup lang="ts">
 import { useToastSafe } from '~/composables/useToastSafe'
 
+// Usar o composable de pedidos
+const {
+  pedidos,
+  isLoading: pedidosLoading,
+  error: pedidosError,
+  fetchPedidos,
+  updatePedidoStatus,
+  getPedidosByStatus,
+  getOrderCountByStatus,
+  setupRealtimeSubscription
+} = usePedidos()
+
+// Tipos já definidos no composable
 interface PedidoItem {
   nome: string
   quantidade: number
@@ -167,70 +205,22 @@ const statusFilters = [
   { label: 'Concluídos', value: 'concluido' }
 ]
 
-// Mock data - em produção virá do Supabase
-const pedidos = ref<Pedido[]>([
-  {
-    id: '1',
-    numero: 1001,
-    cliente: 'João Silva',
-    telefone: '(11) 99999-9999',
-    endereco: 'Rua das Flores, 123',
-    items: [
-      { nome: 'Pizza Margherita G', quantidade: 1, preco: 35.90 },
-      { nome: 'Coca-Cola 2L', quantidade: 2, preco: 8.00 }
-    ],
-    total: 51.90,
-    formaPagamento: 'dinheiro',
-    tipoEntrega: 'entrega',
-    status: 'novo',
-    troco: 60.00,
-    dataHora: new Date(),
-    tempoEstimado: 30
-  },
-  {
-    id: '2',
-    numero: 1002,
-    cliente: 'Maria Santos',
-    telefone: '(11) 88888-8888',
-    items: [
-      { nome: 'Hambúrguer Artesanal', quantidade: 2, preco: 25.90 },
-      { nome: 'Batata Frita', quantidade: 1, preco: 12.00 }
-    ],
-    total: 63.80,
-    formaPagamento: 'cartao',
-    tipoEntrega: 'retirada',
-    status: 'cozinha',
-    dataHora: new Date(Date.now() - 15 * 60 * 1000),
-    tempoEstimado: 25
-  },
-  {
-    id: '3',
-    numero: 1003,
-    cliente: 'Pedro Costa',
-    telefone: '(11) 77777-7777',
-    endereco: 'Av. Principal, 456',
-    items: [
-      { nome: 'Lasanha Bolonhesa', quantidade: 1, preco: 28.90 }
-    ],
-    total: 28.90,
-    formaPagamento: 'pix',
-    tipoEntrega: 'entrega',
-    status: 'entrega',
-    dataHora: new Date(Date.now() - 45 * 60 * 1000),
-    tempoEstimado: 20
+// Inicializar dados e real-time quando component montar
+onMounted(async () => {
+  await fetchPedidos()
+  setupRealtimeSubscription()
+})
+
+// Mostrar erro se houver
+watchEffect(() => {
+  if (pedidosError.value) {
+    console.error('Erro nos pedidos:', pedidosError.value)
   }
-  ])
+})
 
-// Computed para filtrar pedidos por status
+// Computed para filtrar pedidos por status - agora usando o composable
 const getOrdersByStatus = (status: string) => {
-  if (status === 'todos') return pedidos.value
-  return pedidos.value.filter(pedido => pedido.status === status)
-}
-
-// Contar pedidos por status
-const getOrderCountByStatus = (status: string) => {
-  if (status === 'todos') return pedidos.value.length
-  return pedidos.value.filter(pedido => pedido.status === status).length
+  return getPedidosByStatus(status)
 }
 
 // Ações dos pedidos
@@ -271,10 +261,12 @@ const completeOrder = (pedidoId: string) => {
 
 const updateOrderStatus = async (pedidoId: string, newStatus: string) => {
   const pedido = pedidos.value.find(p => p.id === pedidoId)
-  if (pedido) {
-    const oldStatus = pedido.status
-    pedido.status = newStatus as any
-    
+  if (!pedido) return
+
+  // Atualizar no Supabase
+  const success = await updatePedidoStatus(pedidoId, newStatus)
+  
+  if (success) {
     // Mostrar notificação de sucesso
     const toast = await useToastSafe()
     if (toast) {
@@ -299,6 +291,12 @@ const updateOrderStatus = async (pedidoId: string, newStatus: string) => {
     setTimeout(() => {
       closeModal()
     }, 800)
+  } else {
+    // Mostrar erro se não conseguiu atualizar
+    const toast = await useToastSafe()
+    if (toast) {
+      toast.error(`Erro ao atualizar pedido #${pedido.numero}`)
+    }
   }
 }
 
