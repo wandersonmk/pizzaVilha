@@ -84,28 +84,60 @@ export const usePedidos = () => {
 
   // Função para converter pedido do Supabase para o formato da interface
   const convertSupabasePedido = (pedidoSupabase: PedidoSupabase): Pedido => {
-    // Parse do campo "pedido" para extrair itens (formato: "2x Pizza Margherita Grande, 1x Refrigerante 2L")
+    // Parse do campo "pedido" para extrair itens
     const items: PedidoItem[] = []
     const pedidoText = pedidoSupabase.pedido
     
-    // Parse simples do texto do pedido
-    const itemsTexto = pedidoText.split(',').map(item => item.trim())
+    // Parse suporta quebras de linha OU vírgula seguida de "Nx " (para não quebrar em vírgulas de preço)
+    const itemsTexto = pedidoText
+      .split(/\n|,\s+(?=\d+x\s)/)
+      .map(item => item.trim())
+      .filter(item => item.length > 0)
     
     itemsTexto.forEach(itemTexto => {
-      const match = itemTexto.match(/(\d+)x\s*(.+)/)
-      if (match && match[1] && match[2]) {
-        const quantidade = parseInt(match[1])
-        const nome = match[2].trim()
-        
-        // Estimar preço baseado no valor total dividido pelos itens
-        const precoEstimado = parseFloat(pedidoSupabase.valor_total) / itemsTexto.length
+      // Tenta fazer match com padrão "NxN Item - R$ XX,XX" ou "NxN Item"
+      // Regex captura: quantidade, nome (tudo até " - R$"), e preço
+      const matchComPreco = itemTexto.match(/^(\d+)x\s+(.+?)\s+-\s+R\$\s+([\d,\.]+)$/)
+      
+      if (matchComPreco && matchComPreco[1] && matchComPreco[2] && matchComPreco[3]) {
+        // Formato completo com preço: "2x Pizza Margherita (Grande) - R$ 52,64"
+        const quantidade = parseInt(matchComPreco[1])
+        const nome = matchComPreco[2].trim()
+        const precoStr = matchComPreco[3].replace(',', '.')
+        const precoTotal = parseFloat(precoStr)
         
         items.push({
           nome,
           quantidade,
-          preco: precoEstimado / quantidade,
+          preco: precoTotal / quantidade,
           observacao: undefined
         })
+      } else {
+        // Tenta match sem preço: "2x Pizza Margherita"
+        const matchSemPreco = itemTexto.match(/^(\d+)x\s+(.+)$/)
+        
+        if (matchSemPreco && matchSemPreco[1] && matchSemPreco[2]) {
+          const quantidade = parseInt(matchSemPreco[1])
+          // Remove qualquer parte que pareça preço do nome (caso tenha sobrado)
+          const nome = matchSemPreco[2].trim().replace(/\s+-\s+R\$\s+[\d,\.]+$/, '')
+          const precoEstimado = parseFloat(pedidoSupabase.valor_total) / itemsTexto.length
+          
+          items.push({
+            nome,
+            quantidade,
+            preco: precoEstimado / quantidade,
+            observacao: undefined
+          })
+        } else {
+          // Sem padrão "Nx" - assumir 1 item
+          const nomeLimpo = itemTexto.trim().replace(/\s+-\s+R\$\s+[\d,\.]+$/, '')
+          items.push({
+            nome: nomeLimpo,
+            quantidade: 1,
+            preco: parseFloat(pedidoSupabase.valor_total) / itemsTexto.length,
+            observacao: undefined
+          })
+        }
       }
     })
 

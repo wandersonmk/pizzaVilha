@@ -82,10 +82,15 @@
 import type { Categoria } from '../../shared/types/cardapio.types'
 
 // Composables
-const { categorias, produtos, adicionarCategoria } = useCardapio()
+const { categorias, produtos, adicionarCategoria, carregarCardapio } = useCardapio()
 
 // Estado da interface
 const mostrarModalCategoria = ref(false)
+
+// Carregar dados ao montar o componente
+onMounted(async () => {
+  await carregarCardapio()
+})
 
 // Computed
 const precoMedio = computed(() => {
