@@ -19,9 +19,16 @@ export interface AppUpdate {
   date: Date
 }
 
-export const APP_VERSION = '1.2.0'
+export const APP_VERSION = '1.3.0'
 
 export const APP_UPDATES: AppUpdate[] = [
+  {
+    id: '4',
+    type: 'feature',
+    title: 'Sistema de notificações de atualizações',
+    description: 'Novo painel de notificações que exibe melhorias e correções do aplicativo de forma organizada e intuitiva.',
+    date: new Date('2025-10-31T21:00:00')
+  },
   {
     id: '3',
     type: 'fix',

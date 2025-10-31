@@ -31,9 +31,6 @@
           
           <!-- Área de notificações e sair -->
           <div class="flex items-center space-x-3 relative">
-            <!-- Notificações de atualizações do sistema -->
-            <UpdatesNotification />
-            
             <!-- Botão Sair -->
             <button 
               @click="handleLogout"
