@@ -31,6 +31,9 @@
           
           <!-- Área de notificações e sair -->
           <div class="flex items-center space-x-3 relative">
+            <!-- Toggle de Tema -->
+            <ThemeToggle />
+            
             <!-- Botão Sair -->
             <button 
               @click="handleLogout"

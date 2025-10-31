@@ -58,7 +58,7 @@ function togglePasswordVisibility() {
       :readonly="props.readonly"
       :autocomplete="props.autocomplete"
       @input="onInput"
-      class="w-full rounded-md !bg-secondary hover:!bg-secondary focus:!bg-secondary active:!bg-secondary text-foreground placeholder-muted-foreground focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed border px-3 py-2 [&:-webkit-autofill]:!bg-secondary [&:-webkit-autofill:hover]:!bg-secondary [&:-webkit-autofill:focus]:!bg-secondary [&:-webkit-autofill:active]:!bg-secondary"
+      class="w-full rounded-md text-foreground placeholder-muted-foreground focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed border px-3 py-2"
       :class="{ 
         'border-destructive ring-destructive focus-visible:ring-destructive': props.invalid,
         'border-green-500 ring-green-500 focus-visible:ring-green-500': props.valid && !props.invalid,
@@ -104,26 +104,33 @@ function togglePasswordVisibility() {
 </template>
 
 <style scoped>
-/* Força fundo escuro em todos os estados, incluindo autocomplete */
+/* Força o fundo correto em todos os estados */
 input {
-  background-color: hsl(var(--secondary)) !important;
+  background-color: rgb(var(--secondary)) !important;
+  color: rgb(var(--foreground)) !important;
 }
 
 input:hover,
 input:focus,
 input:active {
-  background-color: hsl(var(--secondary)) !important;
+  background-color: rgb(var(--secondary)) !important;
 }
 
-/* Força fundo escuro no autocomplete do webkit (Chrome, Safari, Edge) */
+/* Força fundo correto no autocomplete do webkit (Chrome, Safari, Edge) */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px hsl(var(--secondary)) inset !important;
-  box-shadow: 0 0 0 1000px hsl(var(--secondary)) inset !important;
-  -webkit-text-fill-color: hsl(var(--foreground)) !important;
-  background-color: hsl(var(--secondary)) !important;
+  -webkit-box-shadow: 0 0 0 1000px rgb(var(--secondary)) inset !important;
+  box-shadow: 0 0 0 1000px rgb(var(--secondary)) inset !important;
+  -webkit-text-fill-color: rgb(var(--foreground)) !important;
+  background-color: rgb(var(--secondary)) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Remove o fundo amarelo padrão do autocomplete */
+input:-webkit-autofill {
+  background-clip: content-box !important;
 }
 </style>
 

@@ -72,9 +72,14 @@ onMounted(() => {
       html.classList.add('light')
       html.classList.remove('dark')
     } else {
+      // Padrão é escuro
       isDark.value = true
       html.classList.add('dark')
       html.classList.remove('light')
+      // Salva como escuro se não houver preferência salva
+      if (!savedTheme) {
+        localStorage.setItem('theme', 'dark')
+      }
     }
   }
 })

@@ -3,6 +3,84 @@
 @tailwind utilities;
 
 @layer base {
+  /* Tema Claro (padrão) */
+  :root {
+    /* Background & Foreground */
+    --background: 255 255 255; /* #FFFFFF */
+    --foreground: 15 23 42; /* #0F172A */
+
+    /* Primary (mantém roxo em ambos os temas) */
+    --primary: 129 98 255; /* #8162FF */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
+
+    /* Secondary - Branco suave para inputs */
+    --secondary: 249 250 251; /* #F9FAFB - cinza muito claro */
+    --secondary-foreground: 15 23 42; /* #0F172A */
+
+    /* Accent */
+    --accent: 226 232 240; /* #E2E8F0 */
+    --accent-foreground: 15 23 42; /* #0F172A */
+
+    /* Muted */
+    --muted: 241 245 249; /* #F1F5F9 */
+    --muted-foreground: 100 116 139; /* #64748B */
+
+    /* Card & Popover */
+    --card: 248 250 252; /* #F8FAFC */
+    --card-foreground: 15 23 42; /* #0F172A */
+    --popover: 255 255 255; /* #FFFFFF */
+    --popover-foreground: 15 23 42; /* #0F172A */
+
+    /* Destructive */
+    --destructive: 239 68 68; /* #EF4444 */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
+    --destructive-surface: 254 242 242; /* #FEF2F2 */
+
+    /* Border, Input, Ring */
+    --border: 226 232 240; /* #E2E8F0 */
+    --input: 226 232 240; /* #E2E8F0 */
+    --ring: 129 98 255; /* #8162FF */
+  }
+
+  /* Tema Escuro */
+  .dark {
+    /* Background & Foreground */
+    --background: 20 21 24; /* #141518 */
+    --foreground: 245 245 245; /* #F5F5F5 - mais claro que branco puro */
+
+    /* Primary */
+    --primary: 129 98 255; /* #8162FF */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
+
+    /* Secondary */
+    --secondary: 26 27 31; /* #1A1B1F */
+    --secondary-foreground: 245 245 245; /* #F5F5F5 - mais claro */
+
+    /* Accent */
+    --accent: 34 28 61; /* #221C3D */
+    --accent-foreground: 245 245 245; /* #F5F5F5 - mais claro */
+
+    /* Muted */
+    --muted: 38 39 43; /* #26272B */
+    --muted-foreground: 156 163 175; /* #9CA3AF - cinza mais claro e visível */
+
+    /* Card & Popover */
+    --card: 26 27 31; /* #1A1B1F */
+    --card-foreground: 245 245 245; /* #F5F5F5 - mais claro */
+    --popover: 26 27 31; /* #1A1B1F */
+    --popover-foreground: 245 245 245; /* #F5F5F5 - mais claro */
+
+    /* Destructive */
+    --destructive: 239 68 68; /* #EF4444 */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
+    --destructive-surface: 47 31 31; /* #2F1F1F */
+
+    /* Border, Input, Ring */
+    --border: 38 39 43; /* #26272B */
+    --input: 38 39 43; /* #26272B */
+    --ring: 129 98 255; /* #8162FF */
+  }
+
   html, body, #__nuxt {
     height: 100%;
   }
