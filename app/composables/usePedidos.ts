@@ -41,6 +41,11 @@ interface Pedido {
 }
 
 export const usePedidos = () => {
+  // Verificar se está no cliente antes de inicializar composables que dependem do DOM
+  if (process.server) {
+    throw new Error('usePedidos só pode ser usado no cliente')
+  }
+
   const supabase = useSupabaseClient()
   const { user } = useAuth()
   const { playNotification, stopNotification } = useNotificationSound()
@@ -48,6 +53,7 @@ export const usePedidos = () => {
   const pedidos = ref<Pedido[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const pedidosDestacados = ref<Set<string>>(new Set()) // IDs dos pedidos recém-chegados
 
   // ID da empresa (por enquanto usando um ID fixo, depois integrar com useEmpresa)
   const empresaId = '75bd85cf-1997-48e2-9367-e554b01a2283'
@@ -152,7 +158,23 @@ export const usePedidos = () => {
         // Tocar notificação se houver mais pedidos "novo" do que antes (e não é a primeira carga)
         if (pedidos.value.length > 0 && novosCount > previousNovosCount) {
           console.log(`🔔 [Notificação] Novo pedido detectado! Antes: ${previousNovosCount}, Agora: ${novosCount}`)
+          
+          // Identificar os novos pedidos e destacá-los
+          const pedidosNovos = novosPedidos.filter(p => p.status === 'novo')
+          const novosIds = pedidosNovos.slice(0, novosCount - previousNovosCount).map(p => p.id)
+          
+          // Adicionar aos destacados
+          novosIds.forEach(id => pedidosDestacados.value.add(id))
+          
+          // Tocar som
           playNotification()
+          console.log('� [Destaque] Novos pedidos destacados:', novosIds)
+          
+          // Remover destaque após 10 segundos
+          setTimeout(() => {
+            novosIds.forEach(id => pedidosDestacados.value.delete(id))
+            console.log('✨ [Destaque] Destaque removido dos pedidos:', novosIds)
+          }, 10000)
         }
         
         pedidos.value = novosPedidos
@@ -373,6 +395,7 @@ export const usePedidos = () => {
     startPolling,
     stopPolling,
     stopNotification, // Exportar para parar o som manualmente
+    pedidosDestacados: readonly(pedidosDestacados), // IDs dos pedidos destacados
     formatTelefone,
     testSupabaseConnection
   }

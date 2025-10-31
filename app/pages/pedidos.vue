@@ -9,6 +9,25 @@ definePageMeta({
 const isLoading = ref(true)
 const { isLoading: authLoading } = useAuth()
 
+// Composables que só funcionam no cliente
+const pedidosData = process.client ? usePedidos() : null
+
+// Título dinâmico da página baseado no número de pedidos novos
+const pageTitle = computed(() => {
+  if (!pedidosData) return 'Gerenciar Pedidos - Pizza Vila'
+  
+  const novosCount = pedidosData.getOrderCountByStatus('novo')
+  if (novosCount > 0) {
+    return `(${novosCount}) Novos Pedidos - Pizza Vila`
+  }
+  return 'Gerenciar Pedidos - Pizza Vila'
+})
+
+// Atualizar título da aba
+useHead({
+  title: pageTitle
+})
+
 // Aguarda a autenticação ser carregada e adiciona um delay mínimo para UX
 onMounted(async () => {
   // Aguarda o auth loading terminar

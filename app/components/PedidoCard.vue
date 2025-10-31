@@ -1,6 +1,11 @@
 <template>
   <div 
-    class="bg-background border border-border rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-primary/50"
+    :class="[
+      'bg-background border rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer',
+      props.isDestacado 
+        ? 'border-orange-400 bg-orange-50 animate-pulse shadow-orange-200 shadow-lg' 
+        : 'border-border hover:border-primary/50'
+    ]"
     @click="$emit('view', pedido)"
   >
     <!-- Header compacto -->
@@ -130,11 +135,7 @@ interface Pedido {
   tempoEstimado?: number
 }
 
-interface Props {
-  pedido: Pedido
-}
-
-defineProps<Props>()
+// Props definidas no final do arquivo
 
 defineEmits<{
   view: [pedido: Pedido]
@@ -192,4 +193,14 @@ const getTimeAgo = (date: Date) => {
   const diffInHours = Math.floor(diffInMinutes / 60)
   return `${diffInHours}h atrás`
 }
+
+// Props para verificar se o pedido está destacado
+interface Props {
+  pedido: Pedido
+  isDestacado?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isDestacado: false
+})
 </script>

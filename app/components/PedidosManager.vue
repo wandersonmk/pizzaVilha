@@ -64,6 +64,7 @@
             v-for="pedido in getOrdersByStatus('novo')"
             :key="pedido.id"
             :pedido="pedido"
+            :is-destacado="pedidosDestacados.has(pedido.id)"
             @view="viewOrder"
             @accept="acceptOrder"
             @print="printOrder"
@@ -164,7 +165,8 @@ const {
   getPedidosByStatus,
   getOrderCountByStatus,
   setupRealtimeSubscription,
-  stopNotification
+  stopNotification,
+  pedidosDestacados
 } = usePedidos()
 
 // Debug: Verificar se as funções foram carregadas
