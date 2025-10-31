@@ -31,33 +31,8 @@
           
           <!-- Área de notificações e sair -->
           <div class="flex items-center space-x-3 relative">
-            <!-- Botão de notificações -->
-            <div class="relative">
-              <button 
-                @click="isNotificationOpen = !isNotificationOpen"
-                class="relative p-2 rounded-lg text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
-                title="Notificações"
-              >
-                <font-awesome-icon 
-                  icon="bell" 
-                  class="w-5 h-5" 
-                />
-                <!-- Badge de notificação -->
-                <span 
-                  v-if="unreadNotifications > 0"
-                  class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs rounded-full flex items-center justify-center px-1"
-                >
-                  {{ unreadNotifications > 99 ? '99+' : unreadNotifications }}
-                </span>
-              </button>
-              
-              <!-- Painel de notificações -->
-              <NotificationPanel 
-                ref="notificationPanel"
-                :is-open="isNotificationOpen"
-                @close="isNotificationOpen = false"
-              />
-            </div>
+            <!-- Notificações de atualizações do sistema -->
+            <UpdatesNotification />
             
             <!-- Botão Sair -->
             <button 
@@ -88,15 +63,6 @@
 <script setup lang="ts">
 // Estado do menu mobile
 const isMobileMenuOpen = ref(false)
-
-// Estado das notificações
-const isNotificationOpen = ref(false)
-const notificationPanel = ref()
-
-// Computed para obter o número de notificações não lidas do painel
-const unreadNotifications = computed(() => {
-  return notificationPanel.value?.unreadCount || 0
-})
 
 // Composables para autenticação
 const { signOut } = useAuth()
