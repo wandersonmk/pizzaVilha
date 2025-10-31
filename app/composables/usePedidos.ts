@@ -21,6 +21,7 @@ interface PedidoSupabase {
   troco?: string
   status: 'novo' | 'cozinha' | 'entrega' | 'concluido'
   created_at: string
+  updated_at: string
 }
 
 interface Pedido {
@@ -37,6 +38,7 @@ interface Pedido {
   observacao?: string
   troco?: number
   dataHora: Date
+  updatedAt: Date
   tempoEstimado?: number
 }
 
@@ -155,11 +157,12 @@ export const usePedidos = () => {
       observacao: pedidoSupabase.observacao || undefined,
       troco: pedidoSupabase.troco ? parseFloat(pedidoSupabase.troco) : undefined,
       dataHora: new Date(pedidoSupabase.created_at),
+      updatedAt: new Date(pedidoSupabase.updated_at),
       tempoEstimado: 30 // Default de 30 minutos
     }
   }
 
-  // Buscar todos os pedidos (apenas de hoje para o kanban)
+  // Buscar pedidos do kanban (filtro inteligente baseado em status)
   const fetchPedidos = async () => {
     if (!empresaId) {
       error.value = 'Empresa não encontrada'
@@ -170,16 +173,11 @@ export const usePedidos = () => {
       isLoading.value = true
       error.value = null
 
-      // Obter data de hoje (início do dia em UTC)
-      const hoje = new Date()
-      hoje.setHours(0, 0, 0, 0)
-      const inicioHoje = hoje.toISOString()
-
+      // Buscar todos os pedidos e filtrar no client-side para ter controle total
       const { data, error: supabaseError } = await supabase
         .from('pedidos')
         .select('*')
         .eq('empresa_id', empresaId)
-        .gte('created_at', inicioHoje) // Apenas pedidos criados a partir de hoje
         .order('created_at', { ascending: false })
 
       if (supabaseError) {
@@ -187,26 +185,50 @@ export const usePedidos = () => {
       }
 
       if (data) {
-        const novosPedidos = data.map(convertSupabasePedido)
+        // Filtrar pedidos: mostrar não concluídos OU concluídos criados há menos de 5h
+        const cincoHorasEmMs = 5 * 60 * 60 * 1000 // 5 horas em milissegundos
+        const agora = new Date().getTime()
+        
+        const pedidosFiltrados = data.filter(p => {
+          if (p.status !== 'concluido') {
+            // Não concluído: sempre mostrar (independente do tempo)
+            return true
+          } else {
+            // Concluído: mostrar apenas se CRIADO há menos de 5h
+            const createdAt = new Date(p.created_at).getTime()
+            const diferencaMs = agora - createdAt
+            const horasAtras = diferencaMs / (60 * 60 * 1000)
+            
+            console.log(`🔍 Pedido #${p.numero_pedido} concluído criado há ${horasAtras.toFixed(2)}h - ${horasAtras < 5 ? 'MOSTRAR ✅' : 'OCULTAR ❌'}`)
+            
+            return horasAtras < 5
+          }
+        })
+        
+        const novosPedidos = pedidosFiltrados.map(convertSupabasePedido)
         
         // Verificar se há novos pedidos com status "novo"
         const novosCount = novosPedidos.filter(p => p.status === 'novo').length
         const previousNovosCount = pedidos.value.filter(p => p.status === 'novo').length
+        const isPrimeiraGarga = pedidos.value.length === 0
         
-        // Tocar notificação se houver mais pedidos "novo" do que antes (e não é a primeira carga)
-        if (pedidos.value.length > 0 && novosCount > previousNovosCount) {
-          console.log(`🔔 [Notificação] Novo pedido detectado! Antes: ${previousNovosCount}, Agora: ${novosCount}`)
+        // Tocar notificação se houver mais pedidos "novo" do que antes OU se é a primeira carga com pedidos novos
+        if ((isPrimeiraGarga && novosCount > 0) || (!isPrimeiraGarga && novosCount > previousNovosCount)) {
+          console.log(`🔔 [Notificação] Novo pedido detectado! Antes: ${previousNovosCount}, Agora: ${novosCount}, Primeira carga: ${isPrimeiraGarga}`)
           
           // Identificar os novos pedidos e destacá-los
           const pedidosNovos = novosPedidos.filter(p => p.status === 'novo')
-          const novosIds = pedidosNovos.slice(0, novosCount - previousNovosCount).map(p => p.id)
+          
+          // Na primeira carga, destacar todos os novos. Senão, apenas os que aumentaram
+          const quantidadeParaDestacar = isPrimeiraGarga ? novosCount : (novosCount - previousNovosCount)
+          const novosIds = pedidosNovos.slice(0, quantidadeParaDestacar).map(p => p.id)
           
           // Adicionar aos destacados
           novosIds.forEach(id => pedidosDestacados.value.add(id))
           
           // Tocar som
           playNotification()
-          console.log('� [Destaque] Novos pedidos destacados:', novosIds)
+          console.log('💡 [Destaque] Novos pedidos destacados:', novosIds)
           
           // Remover destaque após 10 segundos
           setTimeout(() => {
