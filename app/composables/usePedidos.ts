@@ -159,7 +159,7 @@ export const usePedidos = () => {
     }
   }
 
-  // Buscar todos os pedidos
+  // Buscar todos os pedidos (apenas de hoje para o kanban)
   const fetchPedidos = async () => {
     if (!empresaId) {
       error.value = 'Empresa não encontrada'
@@ -170,10 +170,16 @@ export const usePedidos = () => {
       isLoading.value = true
       error.value = null
 
+      // Obter data de hoje (início do dia em UTC)
+      const hoje = new Date()
+      hoje.setHours(0, 0, 0, 0)
+      const inicioHoje = hoje.toISOString()
+
       const { data, error: supabaseError } = await supabase
         .from('pedidos')
         .select('*')
         .eq('empresa_id', empresaId)
+        .gte('created_at', inicioHoje) // Apenas pedidos criados a partir de hoje
         .order('created_at', { ascending: false })
 
       if (supabaseError) {
@@ -414,11 +420,37 @@ export const usePedidos = () => {
     return subscription
   }
 
+  // Buscar todos os pedidos (sem filtro de data) - para relatórios
+  const fetchAllPedidos = async () => {
+    if (!empresaId) {
+      error.value = 'Empresa não encontrada'
+      return []
+    }
+
+    try {
+      const { data, error: supabaseError } = await supabase
+        .from('pedidos')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .order('created_at', { ascending: false })
+
+      if (supabaseError) {
+        throw supabaseError
+      }
+
+      return data ? data.map(convertSupabasePedido) : []
+    } catch (err: any) {
+      console.error('Erro ao buscar todos os pedidos:', err)
+      return []
+    }
+  }
+
   return {
     pedidos: readonly(pedidos),
     isLoading: readonly(isLoading),
     error: readonly(error),
-    fetchPedidos,
+    fetchPedidos, // Busca apenas pedidos de hoje (para o kanban)
+    fetchAllPedidos, // Busca todos os pedidos (para relatórios)
     updatePedidoStatus,
     createPedido,
     getPedidosByStatus,
