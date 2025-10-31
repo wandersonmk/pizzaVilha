@@ -22,10 +22,10 @@ export const useNotificationSound = () => {
         isPlaying = false
       })
 
-      // Parar automaticamente após 10 segundos
+      // Parar automaticamente após 30 segundos
       stopTimeout = setTimeout(() => {
         stopNotification()
-      }, 10000)
+      }, 30000)
     } catch (err) {
       console.error('❌ Erro ao criar áudio:', err)
       isPlaying = false
