@@ -131,16 +131,16 @@
           <!-- Botões de mudança de status -->
           <template v-if="pedido?.status === 'novo'">
             <button
-              @click="alert('🔴 CLIQUE DETECTADO!')"
+              @click="acceptPedido"
               class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              ✅ Aceitar Pedido (TESTE)
+              ✅ Aceitar Pedido
             </button>
           </template>
           
           <template v-else-if="pedido?.status === 'cozinha'">
             <button
-              @click="updateStatusDirectly(pedido.tipoEntrega === 'entrega' ? 'entrega' : 'concluido')"
+              @click="markPedidoAsReady"
               class="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               <font-awesome-icon icon="utensils" class="w-4 h-4 mr-2" />
@@ -150,7 +150,7 @@
           
           <template v-else-if="pedido?.status === 'entrega'">
             <button
-              @click="updateStatusDirectly('concluido')"
+              @click="completePedido"
               class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               <font-awesome-icon icon="check-circle" class="w-4 h-4 mr-2" />
@@ -209,45 +209,30 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   close: []
   print: [pedido: Pedido]
-  'update-status': [pedidoId: string, status: string]
+  accept: [pedidoId: string]
+  ready: [pedidoId: string]
+  complete: [pedidoId: string]
 }>()
 
-// Função que atualiza e força recarga
-const updateStatusDirectly = async (newStatus: string) => {
-  if (!props.pedido) {
-    alert('❌ Pedido não encontrado')
-    return
-  }
-
-  try {
-    console.log(`🔄 Atualizando pedido ${props.pedido.id} de "${props.pedido.status}" para "${newStatus}"`)
-    
-    // Usar o cliente Supabase diretamente
-    const supabase = useSupabaseClient()
-    
-    // Atualizar no banco
-    const { data, error } = await supabase
-      .from('pedidos')
-      .update({ status: newStatus })
-      .eq('id', props.pedido.id)
-      .select()
-
-    if (error) {
-      throw error
-    }
-
-    console.log('✅ Pedido atualizado:', data)
-    alert(`✅ Status atualizado para: ${newStatus}`)
-    
-    // Fechar modal
+// Funções que emitem eventos para o componente pai (como os botões da tela principal)
+const acceptPedido = () => {
+  if (props.pedido) {
+    emit('accept', props.pedido.id)
     emit('close')
-    
-    // Recarregar página para garantir sincronização
-    window.location.reload()
-    
-  } catch (error) {
-    console.error('💥 Erro:', error)
-    alert(`❌ Erro: ${error.message || 'Erro desconhecido'}`)
+  }
+}
+
+const markPedidoAsReady = () => {
+  if (props.pedido) {
+    emit('ready', props.pedido.id)
+    emit('close')
+  }
+}
+
+const completePedido = () => {
+  if (props.pedido) {
+    emit('complete', props.pedido.id)
+    emit('close')
   }
 }
 

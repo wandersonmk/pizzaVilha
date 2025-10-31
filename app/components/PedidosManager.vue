@@ -146,7 +146,9 @@
       :isOpen="isModalOpen"
       :pedido="selectedPedido"
       @close="closeModal"
-      @update-status="updateOrderStatus"
+      @accept="acceptOrder"
+      @ready="markAsReady"
+      @complete="completeOrder"
     />
     </div> <!-- Fecha div do content -->
   </div>
