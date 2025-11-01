@@ -26,23 +26,50 @@
     <div v-else>
     <!-- Header com filtros e estatísticas rápidas -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-      <div class="flex gap-2">
-        <button
-          v-for="status in statusFilters"
-          :key="status.value"
-          @click="activeFilter = status.value"
-          :class="[
-            'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-            activeFilter === status.value
-              ? 'bg-primary text-primary-foreground shadow-md'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
-          ]"
-        >
-          {{ status.label }}
-          <span v-if="getOrderCountByStatus(status.value)" class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-background/50">
-            {{ getOrderCountByStatus(status.value) }}
-          </span>
-        </button>
+      <div class="flex flex-col sm:flex-row gap-3 flex-1">
+        <!-- Filtros de Status -->
+        <div class="flex gap-2 flex-wrap">
+          <button
+            v-for="status in statusFilters"
+            :key="status.value"
+            @click="activeFilter = status.value"
+            :class="[
+              'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+              activeFilter === status.value
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            ]"
+          >
+            {{ status.label }}
+            <span v-if="getOrderCountByStatus(status.value)" class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-background/50">
+              {{ getOrderCountByStatus(status.value) }}
+            </span>
+          </button>
+        </div>
+        
+        <!-- Campo de Busca -->
+        <div class="relative flex-1 max-w-xs">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Buscar por pedido, cliente ou telefone..."
+            class="w-full pl-10 pr-10 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+          />
+          <button
+            v-if="searchQuery"
+            @click="searchQuery = ''"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
       </div>
       
       <!-- Botão Novo Pedido -->
@@ -227,6 +254,7 @@ const activeFilter = ref<string>('todos')
 const isModalOpen = ref(false)
 const selectedPedido = ref<Pedido | null>(null)
 const isModalNovoPedidoOpen = ref(false)
+const searchQuery = ref('')
 
 // Filtros de status
 const statusFilters = [
@@ -254,7 +282,48 @@ watchEffect(() => {
 
 // Computed para filtrar pedidos por status - agora usando o composable
 const getOrdersByStatus = (status: string) => {
-  return getPedidosByStatus(status)
+  let pedidos = getPedidosByStatus(status)
+  
+  // Aplicar filtro de busca se houver texto
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    
+    // Debug: ver estrutura dos pedidos
+    if (pedidos.length > 0) {
+      console.log('[Filtro Debug] Exemplo de pedido:', pedidos[0])
+      console.log('[Filtro Debug] Query:', query)
+    }
+    
+    pedidos = pedidos.filter(pedido => {
+      // Buscar por número do pedido
+      if (pedido.numero && pedido.numero.toString().includes(query)) {
+        console.log('[Filtro] Match por número:', pedido.numero)
+        return true
+      }
+      
+      // Buscar por nome do cliente
+      if (pedido.cliente && pedido.cliente.toLowerCase().includes(query)) {
+        console.log('[Filtro] Match por cliente:', pedido.cliente)
+        return true
+      }
+      
+      // Buscar por telefone (remove caracteres especiais)
+      if (pedido.telefone) {
+        const telefoneClean = pedido.telefone.replace(/\D/g, '')
+        const queryClean = query.replace(/\D/g, '')
+        if (telefoneClean.includes(queryClean)) {
+          console.log('[Filtro] Match por telefone:', pedido.telefone)
+          return true
+        }
+      }
+      
+      return false
+    })
+    
+    console.log('[Filtro] Pedidos filtrados:', pedidos.length)
+  }
+  
+  return pedidos
 }
 
 // Ações dos pedidos
