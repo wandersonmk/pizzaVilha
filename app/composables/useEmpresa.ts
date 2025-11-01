@@ -46,9 +46,45 @@ export function useEmpresa() {
     }
   }
 
+  // Função para obter o ID da empresa
+  async function getEmpresaId(): Promise<string | null> {
+    if (!process.client) return null
+
+    try {
+      const supabase = useSupabaseClient()
+      
+      // Pega o usuário atual da sessão do Supabase diretamente
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user?.id) {
+        console.log('Usuário não está logado')
+        return null
+      }
+
+      // Busca a empresa no banco
+      const { data, error } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('usuario_id', user.id)
+        .single()
+
+      if (error) {
+        console.error('Erro ao buscar empresa ID:', error)
+        return null
+      }
+
+      return data?.id || null
+      
+    } catch (err) {
+      console.error('Erro ao buscar empresa ID:', err)
+      return null
+    }
+  }
+
   return {
     nomeEmpresa: readonly(nomeEmpresa),
     isLoadingEmpresa: readonly(isLoadingEmpresa),
-    buscarNomeEmpresa
+    buscarNomeEmpresa,
+    getEmpresaId
   }
 }

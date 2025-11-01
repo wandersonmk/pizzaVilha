@@ -44,6 +44,17 @@
           </span>
         </button>
       </div>
+      
+      <!-- Botão Novo Pedido -->
+      <button
+        @click="abrirModalNovoPedido"
+        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-md"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Novo Pedido
+      </button>
     </div>
 
     <!-- Grid de colunas por status (Kanban) -->
@@ -150,6 +161,13 @@
       @ready="markAsReady"
       @complete="completeOrder"
     />
+
+    <!-- Modal de Novo Pedido -->
+    <ModalNovoPedido
+      :isOpen="isModalNovoPedidoOpen"
+      @close="fecharModalNovoPedido"
+      @pedido-criado="onPedidoCriado"
+    />
     </div> <!-- Fecha div do content -->
   </div>
 </template>
@@ -168,7 +186,8 @@ const {
   getOrderCountByStatus,
   setupRealtimeSubscription,
   stopNotification,
-  pedidosDestacados
+  pedidosDestacados,
+  setModalAberto
 } = usePedidos()
 
 // Debug: Verificar se as funções foram carregadas
@@ -207,6 +226,7 @@ interface Pedido {
 const activeFilter = ref<string>('todos')
 const isModalOpen = ref(false)
 const selectedPedido = ref<Pedido | null>(null)
+const isModalNovoPedidoOpen = ref(false)
 
 // Filtros de status
 const statusFilters = [
@@ -523,5 +543,23 @@ const getPaymentLabel = (payment: string) => {
     pix: 'PIX'
   }
   return labels[payment as keyof typeof labels] || payment
+}
+
+// Função para abrir modal de novo pedido
+const abrirModalNovoPedido = () => {
+  isModalNovoPedidoOpen.value = true
+  setModalAberto(true) // Pausa o polling
+}
+
+// Função para fechar modal de novo pedido
+const fecharModalNovoPedido = () => {
+  isModalNovoPedidoOpen.value = false
+  setModalAberto(false) // Retoma o polling
+}
+
+// Função chamada após criar pedido com sucesso
+const onPedidoCriado = () => {
+  fecharModalNovoPedido()
+  fetchPedidos() // Atualiza lista
 }
 </script>

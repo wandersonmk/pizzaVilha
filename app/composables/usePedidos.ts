@@ -359,6 +359,7 @@ export const usePedidos = () => {
   // Real-time subscription
   // Polling para simular real-time quando Supabase Realtime não está habilitado
   let pollingInterval: NodeJS.Timeout | null = null
+  const modalAberto = useState<boolean>('modal_novo_pedido_aberto', () => false)
 
   const startPolling = (intervalMs: number = 30000) => { // 30 segundos por padrão
     if (pollingInterval) return // Já está rodando
@@ -366,6 +367,12 @@ export const usePedidos = () => {
     console.log(`[Polling] Iniciando atualização automática a cada ${intervalMs / 1000}s`)
     
     pollingInterval = setInterval(async () => {
+      // Não atualizar se o modal de novo pedido estiver aberto
+      if (modalAberto.value) {
+        console.log('[Polling] Modal aberto, pulando atualização...')
+        return
+      }
+      
       console.log('[Polling] Buscando atualizações...')
       await fetchPedidos()
     }, intervalMs)
@@ -483,6 +490,8 @@ export const usePedidos = () => {
     stopNotification, // Exportar para parar o som manualmente
     pedidosDestacados: readonly(pedidosDestacados), // IDs dos pedidos destacados
     formatTelefone,
-    testSupabaseConnection
+    testSupabaseConnection,
+    // Controle do modal
+    setModalAberto: (value: boolean) => { modalAberto.value = value }
   }
 }
