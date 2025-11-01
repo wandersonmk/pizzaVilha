@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Sidebar -->
-    <AppSidebar :is-mobile-open="isMobileMenuOpen" @close-mobile="isMobileMenuOpen = false" />
+    <ClientOnly>
+      <AppSidebar :is-mobile-open="isMobileMenuOpen" @close-mobile="isMobileMenuOpen = false" />
+    </ClientOnly>
     
     <!-- Conteúdo principal -->
     <div class="lg:ml-64 min-h-screen flex flex-col">
@@ -16,10 +18,12 @@
               class="lg:hidden p-2 rounded-lg text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
               title="Abrir menu"
             >
-              <font-awesome-icon 
-                icon="bars" 
-                class="w-5 h-5" 
-              />
+              <ClientOnly>
+                <font-awesome-icon 
+                  icon="bars" 
+                  class="w-5 h-5" 
+                />
+              </ClientOnly>
             </button>
             
             <!-- Título -->
@@ -40,10 +44,12 @@
               class="p-2 rounded-lg text-foreground/70 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all duration-200 group"
               title="Sair"
             >
-              <font-awesome-icon 
-                icon="sign-out-alt" 
-                class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" 
-              />
+              <ClientOnly>
+                <font-awesome-icon 
+                  icon="sign-out-alt" 
+                  class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" 
+                />
+              </ClientOnly>
             </button>
           </div>
         </div>

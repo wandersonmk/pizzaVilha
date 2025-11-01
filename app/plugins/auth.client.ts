@@ -11,18 +11,23 @@ export default defineNuxtPlugin(async () => {
     const loading = useState<boolean>('auth_loading', () => true)
     
     try {
-      // Aguardar um pouco para garantir que Supabase está disponível (reduzido)
-      await new Promise(resolve => setTimeout(resolve, 200))
-      
       const nuxtApp = useNuxtApp()
       
-      if (!nuxtApp.$supabase) {
-        console.error('[Auth Plugin] Supabase não disponível')
+      // Aguardar Supabase estar disponível com retry
+      let supabase = nuxtApp.$supabase as SupabaseClient
+      let attempts = 0
+      while (!supabase && attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+        supabase = nuxtApp.$supabase as SupabaseClient
+        attempts++
+      }
+      
+      if (!supabase) {
+        // Falhou silenciosamente - não logar erro no console
         loading.value = false
         return
       }
       
-      const supabase = nuxtApp.$supabase as SupabaseClient
       console.log('[Auth Plugin] Cliente Supabase obtido')
       
       // Verificar se existe uma sessão salva

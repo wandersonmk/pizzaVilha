@@ -8,7 +8,9 @@
     <div class="bg-card border border-border rounded-lg p-6">
       <div class="flex items-center gap-3 mb-6">
         <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-          <Icon name="ph:gear" class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <ClientOnly>
+            <font-awesome-icon :icon="['fas', 'gear']" class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          </ClientOnly>
         </div>
         <div>
           <h3 class="text-lg font-semibold text-foreground">Configurações Gerais</h3>
@@ -62,13 +64,38 @@
 
     <!-- Configurações de Funcionamento -->
     <div class="bg-card border border-border rounded-lg p-6">
-      <div class="flex items-center gap-3 mb-6">
-        <div class="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
-          <Icon name="ph:clock" class="w-6 h-6 text-orange-600 dark:text-white" />
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
+            <ClientOnly>
+              <font-awesome-icon :icon="['fas', 'clock']" class="w-6 h-6 text-orange-600 dark:text-white" />
+            </ClientOnly>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-foreground">Horário de Funcionamento</h3>
+            <p class="text-sm text-muted-foreground">Defina os horários de abertura e fechamento</p>
+          </div>
         </div>
-        <div>
-          <h3 class="text-lg font-semibold text-foreground">Horário de Funcionamento</h3>
-          <p class="text-sm text-muted-foreground">Defina os horários de abertura e fechamento</p>
+        
+        <!-- Toggle Aberto/Fechado -->
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-medium text-foreground">
+            {{ configuracoes.aberto ? '🟢 Aberto' : '🔴 Fechado' }}
+          </span>
+          <button
+            @click="toggleStatusAberto"
+            :class="[
+              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+              configuracoes.aberto ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+            ]"
+          >
+            <span
+              :class="[
+                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                configuracoes.aberto ? 'translate-x-6' : 'translate-x-1'
+              ]"
+            />
+          </button>
         </div>
       </div>
 
@@ -89,6 +116,24 @@
             class="w-full p-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [color-scheme:light] dark:[color-scheme:dark]"
           />
         </div>
+        <div class="space-y-2 md:col-span-2">
+          <label class="block text-sm font-medium text-foreground">Tempo Estimado de Entrega Padrão</label>
+          <select
+            v-model="configuracoes.tempo_estimado"
+            class="w-full p-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Selecione...</option>
+            <option value="15">15 minutos</option>
+            <option value="20">20 minutos</option>
+            <option value="30">30 minutos</option>
+            <option value="40">40 minutos</option>
+            <option value="45">45 minutos</option>
+            <option value="60">1 hora</option>
+            <option value="90">1 hora e 30 min</option>
+            <option value="120">2 horas</option>
+          </select>
+          <p class="text-xs text-muted-foreground">Tempo padrão usado ao criar novos pedidos manualmente</p>
+        </div>
       </div>
     </div>
 
@@ -99,7 +144,9 @@
         :loading="salvando"
         class="bg-blue-600 hover:bg-blue-700 text-white px-8"
       >
-        <Icon name="ph:floppy-disk" class="w-4 h-4 mr-2" />
+        <ClientOnly>
+          <font-awesome-icon :icon="['fas', 'floppy-disk']" class="w-4 h-4 mr-2" />
+        </ClientOnly>
         {{ salvando ? 'Salvando...' : 'Salvar Configurações' }}
       </AppButton>
     </div>
@@ -120,6 +167,8 @@ interface Configuracoes {
   // Funcionamento (campos do banco)
   hora_abertura: string
   hora_fechamento: string
+  tempo_estimado: string
+  aberto: boolean
 }
 
 // State
@@ -132,7 +181,9 @@ const configuracoes = ref<Configuracoes>({
 
   // Funcionamento
   hora_abertura: '18:00',
-  hora_fechamento: '23:30'
+  hora_fechamento: '23:30',
+  tempo_estimado: '30',
+  aberto: true
 })
 
 const salvando = ref(false)
@@ -173,7 +224,9 @@ const carregarConfiguracoes = async () => {
         endereco: config.endereco || '',
         logotipo: config.logotipo || '',
         hora_abertura: config.hora_abertura || '18:00',
-        hora_fechamento: config.hora_fechamento || '23:30'
+        hora_fechamento: config.hora_fechamento || '23:30',
+        tempo_estimado: config.tempo_estimado?.toString() || '30',
+        aberto: config.aberto !== undefined ? config.aberto : true
       }
     }
   } catch (error) {
@@ -200,7 +253,9 @@ const salvarConfiguracoes = async () => {
       endereco: configuracoes.value.endereco,
       logotipo: configuracoes.value.logotipo,
       hora_abertura: configuracoes.value.hora_abertura,
-      hora_fechamento: configuracoes.value.hora_fechamento
+      hora_fechamento: configuracoes.value.hora_fechamento,
+      tempo_estimado: parseInt(configuracoes.value.tempo_estimado),
+      aberto: configuracoes.value.aberto
     })
     
     if (sucesso) {
@@ -214,6 +269,34 @@ const salvarConfiguracoes = async () => {
     await showToast('Erro ao salvar configurações', 'error')
   } finally {
     salvando.value = false
+  }
+}
+
+// Função para alternar status aberto/fechado e salvar imediatamente
+const toggleStatusAberto = async () => {
+  try {
+    const novoStatus = !configuracoes.value.aberto
+    configuracoes.value.aberto = novoStatus
+    
+    const sucesso = await salvarEmpresa({
+      aberto: novoStatus
+    })
+    
+    if (sucesso) {
+      await showToast(
+        novoStatus ? '✅ Empresa marcada como ABERTA' : '⛔ Empresa marcada como FECHADA',
+        'success'
+      )
+    } else {
+      // Reverter em caso de erro
+      configuracoes.value.aberto = !novoStatus
+      await showToast('Erro ao atualizar status', 'error')
+    }
+  } catch (error) {
+    console.error('Erro ao alternar status:', error)
+    // Reverter em caso de erro
+    configuracoes.value.aberto = !configuracoes.value.aberto
+    await showToast('Erro ao atualizar status', 'error')
   }
 }
 
