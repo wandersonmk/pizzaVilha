@@ -1,3 +1,10 @@
+interface VendasMensais {
+  mes: string
+  mesNumero: number
+  totalPedidos: number
+  receita: number
+}
+
 interface DashboardStats {
   totalPedidos: number
   pedidosHoje: number
@@ -12,6 +19,7 @@ interface DashboardStats {
     entrega: number
     concluido: number
   }
+  vendasMensais: VendasMensais[]
 }
 
 export const useDashboardStats = () => {
@@ -29,7 +37,8 @@ export const useDashboardStats = () => {
       cozinha: 0,
       entrega: 0,
       concluido: 0
-    }
+    },
+    vendasMensais: []
   })
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -95,6 +104,45 @@ export const useDashboardStats = () => {
             entrega: pedidos.filter(p => p.status === 'entrega').length,
             concluido: pedidos.filter(p => p.status === 'concluido').length
           }
+
+          // Vendas mensais - últimos 6 meses
+          const vendasPorMes = new Map<string, { totalPedidos: number; receita: number }>()
+          const mesesNomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+          
+          // Agrupar pedidos por mês
+          pedidos.forEach(p => {
+            const data = new Date(p.created_at)
+            const mesNumero = data.getMonth()
+            const mesNome = mesesNomes[mesNumero]
+            const chave = `${mesNumero}-${mesNome}`
+            
+            if (!vendasPorMes.has(chave)) {
+              vendasPorMes.set(chave, { totalPedidos: 0, receita: 0 })
+            }
+            
+            const venda = vendasPorMes.get(chave)!
+            venda.totalPedidos++
+            venda.receita += parseFloat(p.valor_total || '0')
+          })
+          
+          // Criar array dos últimos 6 meses
+          const vendasMensais: VendasMensais[] = []
+          for (let i = 5; i >= 0; i--) {
+            const data = new Date(agora.getFullYear(), agora.getMonth() - i, 1)
+            const mesNumero = data.getMonth()
+            const mesNome = mesesNomes[mesNumero] || 'Jan'
+            const chave = `${mesNumero}-${mesNome}`
+            
+            const venda = vendasPorMes.get(chave) || { totalPedidos: 0, receita: 0 }
+            vendasMensais.push({
+              mes: mesNome,
+              mesNumero,
+              totalPedidos: venda.totalPedidos,
+              receita: venda.receita
+            })
+          }
+          
+          stats.value.vendasMensais = vendasMensais
         }
       } else if (statsData) {
         // Se a RPC existir, usar os dados retornados

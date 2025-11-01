@@ -132,24 +132,17 @@ const createLineChart = () => {
   const ctx = lineChartRef.value.getContext('2d')
   if (!ctx) return
 
-  // Calcular receita média dos últimos 6 meses (simulado baseado na receita total)
-  const receitaAtual = stats.value.receitaTotal
-  const mesesPassados = [
-    receitaAtual * 0.65,
-    receitaAtual * 0.75,
-    receitaAtual * 0.55,
-    receitaAtual * 0.85,
-    receitaAtual * 0.95,
-    receitaAtual
-  ]
+  // Usar dados reais das vendas mensais
+  const labels = stats.value.vendasMensais.map(v => v.mes)
+  const data = stats.value.vendasMensais.map(v => v.receita)
 
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+      labels: labels,
       datasets: [{
         label: 'Vendas (R$)',
-        data: mesesPassados,
+        data: data,
         borderColor: '#10B981', // Verde vibrante para crescimento
         backgroundColor: 'rgba(16, 185, 129, 0.1)', // Verde com transparência
         borderWidth: 3,
