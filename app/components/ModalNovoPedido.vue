@@ -557,13 +557,21 @@
                 <div class="relative">
                   <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                   <input
-                    v-model.number="form.troco"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
+                    v-model="trocoFormatado"
+                    @input="formatarTroco"
+                    type="text"
+                    placeholder="0,00"
                     class="w-full pl-10 pr-3 py-2 bg-secondary border border-input rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
+                </div>
+                <!-- Exibir troco calculado -->
+                <div 
+                  v-if="trocoCalculado > 0" 
+                  class="mt-2 p-2 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-800 rounded-md"
+                >
+                  <p class="text-sm text-green-700 dark:text-green-400 font-medium">
+                    💰 Troco: R$ {{ trocoCalculado.toFixed(2).replace('.', ',') }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -689,6 +697,7 @@ const form = ref({
 
 const valorEntregaExibicao = ref('0,00')
 const valorEntregaNumero = ref(0)
+const trocoFormatado = ref('')
 
 // Computed
 const produtosFiltrados = computed(() => {
@@ -721,6 +730,13 @@ const subtotalItens = computed(() => {
 
 const valorTotalCalculado = computed(() => {
   return subtotalItens.value + valorEntregaNumero.value
+})
+
+// Computed para calcular o valor do troco
+const trocoCalculado = computed(() => {
+  if (!form.value.troco || form.value.troco <= 0) return 0
+  const troco = form.value.troco - valorTotalCalculado.value
+  return troco > 0 ? troco : 0
 })
 
 // Categorias que não são pizza
@@ -932,6 +948,22 @@ const limparConfigPizza = () => {
     borda: null
   }
   buscaSabor.value = ''
+}
+
+// Função para formatar o campo troco com máscara de real brasileiro
+const formatarTroco = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  let valor = input.value.replace(/\D/g, '')
+  
+  if (valor === '') {
+    trocoFormatado.value = ''
+    form.value.troco = null
+    return
+  }
+  
+  const numeroValor = parseInt(valor) / 100
+  form.value.troco = numeroValor
+  trocoFormatado.value = numeroValor.toFixed(2).replace('.', ',')
 }
 
 // Funções auxiliares de pizza

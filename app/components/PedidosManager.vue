@@ -247,6 +247,7 @@ interface Pedido {
   troco?: number
   dataHora: Date
   tempoEstimado?: number
+  valorEntrega?: number
 }
 
 // Estados
@@ -509,7 +510,7 @@ const printOrder = (pedido: Pedido) => {
     <body>
       <div class="header">
         <div class="restaurant-name">PIZZAVILHA</div>
-        <div>Tel: (11) 99999-9999</div>
+        <div>Tel: (75) 9918-7953</div>
       </div>
       
       <div class="section">
@@ -544,6 +545,16 @@ const printOrder = (pedido: Pedido) => {
       <div class="separator"></div>
       
       <div class="section">
+        <div class="item-line">
+          <span>Subtotal:</span>
+          <span>R$ ${(pedido.total - (pedido.valorEntrega || 0)).toFixed(2)}</span>
+        </div>
+        ${pedido.tipoEntrega === 'entrega' && pedido.valorEntrega ? `
+          <div class="item-line">
+            <span>Taxa de entrega:</span>
+            <span>R$ ${pedido.valorEntrega.toFixed(2)}</span>
+          </div>
+        ` : ''}
         <div class="item-line total-line">
           <span>TOTAL:</span>
           <span>R$ ${pedido.total.toFixed(2)}</span>
@@ -553,7 +564,10 @@ const printOrder = (pedido: Pedido) => {
       <div class="section">
         <div><strong>Pagamento:</strong> ${getPaymentLabel(pedido.formaPagamento).toUpperCase()}</div>
         <div><strong>Tipo:</strong> ${pedido.tipoEntrega === 'entrega' ? 'ENTREGA' : 'RETIRADA'}</div>
-        ${pedido.troco ? `<div><strong>Troco para:</strong> R$ ${pedido.troco.toFixed(2)}</div>` : ''}
+        ${pedido.troco ? `
+          <div><strong>Troco para:</strong> R$ ${pedido.troco.toFixed(2)}</div>
+          <div><strong>Troco:</strong> R$ ${(pedido.troco - pedido.total).toFixed(2)}</div>
+        ` : ''}
         ${pedido.tempoEstimado ? `<div><strong>Tempo estimado:</strong> ${pedido.tempoEstimado} min</div>` : ''}
       </div>
       

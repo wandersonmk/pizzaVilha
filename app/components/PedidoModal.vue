@@ -78,7 +78,11 @@
             <div class="space-y-2">
               <div class="flex justify-between">
                 <span class="text-muted-foreground">Subtotal</span>
-                <span class="text-foreground">R$ {{ pedido?.total.toFixed(2) }}</span>
+                <span class="text-foreground">R$ {{ (pedido?.total - (pedido?.valorEntrega || 0)).toFixed(2) }}</span>
+              </div>
+              <div v-if="pedido?.valorEntrega && pedido?.tipoEntrega === 'entrega'" class="flex justify-between">
+                <span class="text-muted-foreground">Taxa de entrega</span>
+                <span class="text-foreground">R$ {{ pedido.valorEntrega.toFixed(2) }}</span>
               </div>
               <div class="flex justify-between text-lg font-bold border-t border-border pt-2">
                 <span class="text-foreground">Total</span>
@@ -97,8 +101,13 @@
               ]">
                 {{ getPaymentLabel(pedido?.formaPagamento || '') }}
               </span>
-              <div v-if="pedido?.troco" class="mt-2">
+              <div v-if="pedido?.troco" class="mt-2 space-y-1">
                 <p class="text-sm text-muted-foreground">Troco para: R$ {{ pedido.troco.toFixed(2) }}</p>
+                <div class="p-2 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-800 rounded-md">
+                  <p class="text-sm text-green-700 dark:text-green-400 font-medium">
+                    💰 Troco: R$ {{ (pedido.troco - pedido.total).toFixed(2) }}
+                  </p>
+                </div>
               </div>
             </div>
             <div class="bg-muted/30 rounded-lg p-4">
@@ -197,6 +206,7 @@ interface Pedido {
   troco?: number
   dataHora: Date
   tempoEstimado?: number
+  valorEntrega?: number
 }
 
 interface Props {
@@ -412,7 +422,7 @@ const printPedido = () => {
     <body>
       <div class="header">
         <div class="restaurant-name">PIZZAVILHA</div>
-        <div>Tel: (11) 99999-9999</div>
+        <div>Tel: (75) 9918-7953</div>
       </div>
       
       <div class="section">
@@ -447,6 +457,16 @@ const printPedido = () => {
       <div class="separator"></div>
       
       <div class="section">
+        <div class="item-line">
+          <span>Subtotal:</span>
+          <span>R$ ${(props.pedido.total - (props.pedido.valorEntrega || 0)).toFixed(2)}</span>
+        </div>
+        ${props.pedido.tipoEntrega === 'entrega' && props.pedido.valorEntrega ? `
+          <div class="item-line">
+            <span>Taxa de entrega:</span>
+            <span>R$ ${props.pedido.valorEntrega.toFixed(2)}</span>
+          </div>
+        ` : ''}
         <div class="item-line total-line">
           <span>TOTAL:</span>
           <span>R$ ${props.pedido.total.toFixed(2)}</span>
@@ -456,7 +476,10 @@ const printPedido = () => {
       <div class="section">
         <div><strong>Pagamento:</strong> ${getPaymentLabel(props.pedido.formaPagamento).toUpperCase()}</div>
         <div><strong>Tipo:</strong> ${props.pedido.tipoEntrega === 'entrega' ? 'ENTREGA' : 'RETIRADA'}</div>
-        ${props.pedido.troco ? `<div><strong>Troco para:</strong> R$ ${props.pedido.troco.toFixed(2)}</div>` : ''}
+        ${props.pedido.troco ? `
+          <div><strong>Troco para:</strong> R$ ${props.pedido.troco.toFixed(2)}</div>
+          <div><strong>Troco:</strong> R$ ${(props.pedido.troco - props.pedido.total).toFixed(2)}</div>
+        ` : ''}
         ${props.pedido.tempoEstimado ? `<div><strong>Tempo estimado:</strong> ${props.pedido.tempoEstimado} min</div>` : ''}
       </div>
       

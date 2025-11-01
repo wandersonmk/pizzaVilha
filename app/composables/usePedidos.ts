@@ -40,6 +40,7 @@ interface Pedido {
   dataHora: Date
   updatedAt: Date
   tempoEstimado?: number
+  valorEntrega?: number
 }
 
 export const usePedidos = () => {
@@ -151,6 +152,7 @@ export const usePedidos = () => {
       endereco: pedidoSupabase.endereco_entrega || undefined,
       items,
       total: parseFloat(pedidoSupabase.valor_total) + parseFloat(pedidoSupabase.valor_entrega || '0'),
+      valorEntrega: pedidoSupabase.valor_entrega ? parseFloat(pedidoSupabase.valor_entrega) : undefined,
       formaPagamento: pedidoSupabase.forma_pagamento,
       tipoEntrega: pedidoSupabase.tipo_retirada,
       status: pedidoSupabase.status,
