@@ -1164,9 +1164,9 @@ const criarPedido = async () => {
 
     const proximoNumero = ultimoPedido ? ultimoPedido.numero_pedido + 1 : 1
 
-    // Montar descrição do pedido
+    // Montar descrição do pedido com preços individuais
     const descricaoPedido = itensPedido.value
-      .map(item => `${item.quantidade}x ${item.nome}`)
+      .map(item => `${item.quantidade}x ${item.nome} - R$ ${(item.quantidade * item.preco).toFixed(2)}`)
       .join(', ')
 
     // Inserir novo pedido

@@ -455,6 +455,19 @@ const printOrder = (pedido: Pedido) => {
           margin-bottom: 2px;
         }
         
+        .item-wrapper {
+          margin-bottom: 4px;
+        }
+        
+        .item-separator {
+          color: #999;
+          font-size: 10px;
+          text-align: center;
+          margin: 4px 0;
+          overflow: hidden;
+          white-space: nowrap;
+        }
+        
         .item-name {
           flex: 1;
         }
@@ -512,21 +525,33 @@ const printOrder = (pedido: Pedido) => {
       
       <div class="section">
         <div class="section-title">CLIENTE:</div>
-        <div>${pedido.cliente}</div>
-        <div>${pedido.telefone}</div>
-        ${pedido.endereco ? `<div>${pedido.endereco}</div>` : '<div><strong>RETIRADA NO BALCÃO</strong></div>'}
+        <div style="margin-bottom: 2px;">
+          <strong>Nome:</strong> ${pedido.cliente}
+        </div>
+        <div style="margin-bottom: 2px;">
+          <strong>Telefone:</strong> ${pedido.telefone}
+        </div>
+        ${pedido.endereco ? `
+          <div style="margin-top: 4px; padding-top: 4px; border-top: 1px dotted #ccc;">
+            <strong>Endereço:</strong><br/>
+            ${pedido.endereco}
+          </div>
+        ` : '<div style="margin-top: 4px; padding: 4px; background: #f0f0f0; text-align: center;"><strong>⚠️ RETIRADA NO BALCÃO</strong></div>'}
       </div>
       
       <div class="separator"></div>
       
       <div class="section">
         <div class="section-title">ITENS:</div>
-        ${pedido.items.map(item => `
-          <div class="item-line">
-            <span class="item-name">${item.quantidade}x ${item.nome}</span>
-            <span class="item-price">R$ ${(item.quantidade * item.preco).toFixed(2)}</span>
+        ${pedido.items.map((item, index) => `
+          <div class="item-wrapper">
+            <div class="item-line">
+              <span class="item-name">${item.quantidade}x ${item.nome}</span>
+              <span class="item-price">R$ ${(item.quantidade * item.preco).toFixed(2)}</span>
+            </div>
+            ${item.observacao ? `<div class="obs">Obs: ${item.observacao}</div>` : ''}
+            ${index < pedido.items.length - 1 ? '<div class="item-separator">...................................</div>' : ''}
           </div>
-          ${item.observacao ? `<div class="obs">Obs: ${item.observacao}</div>` : ''}
         `).join('')}
       </div>
       
