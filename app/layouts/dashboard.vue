@@ -81,8 +81,8 @@ const pageTitle = computed(() => {
       return 'Clientes'
     case '/relatorios':
       return 'Relatórios'
-    case '/ajuste-da-ia':
-      return 'Ajuste da IA'
+    case '/cupons':
+      return 'Cupons de Desconto'
     default:
       return 'Dashboard'
   }
@@ -100,8 +100,8 @@ const pageDescription = computed(() => {
       return 'Gerencie todos os seus clientes'
     case '/relatorios':
       return 'Análise e controle de pedidos'
-    case '/ajuste-da-ia':
-      return 'Configure as configurações de inteligência artificial'
+    case '/cupons':
+      return 'Crie e gerencie cupons promocionais'
     default:
       return 'Visão geral do sistema'
   }
