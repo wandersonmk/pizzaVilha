@@ -1,3 +1,14 @@
+// Interface para configurações da empresa
+export interface EmpresaConfig {
+  id?: string
+  nome: string
+  endereco: string | null
+  telefone: string | null
+  logotipo: string | null
+  hora_abertura: string
+  hora_fechamento: string
+}
+
 export function useEmpresa() {
   // Estado global para o nome da empresa
   const nomeEmpresa = useState<string | null>('empresa_nome', () => null)
@@ -81,10 +92,82 @@ export function useEmpresa() {
     }
   }
 
+  // Buscar todas as configurações da empresa
+  async function buscarConfiguracoes(): Promise<EmpresaConfig | null> {
+    if (!process.client) return null
+
+    try {
+      const supabase = useSupabaseClient()
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user?.id) {
+        console.log('Usuário não está logado')
+        return null
+      }
+
+      const { data, error } = await supabase
+        .from('empresas')
+        .select('id, nome, endereco, telefone, logotipo, hora_abertura, hora_fechamento')
+        .eq('usuario_id', user.id)
+        .single()
+
+      if (error) {
+        console.error('Erro ao buscar configurações:', error)
+        return null
+      }
+
+      return data as EmpresaConfig
+      
+    } catch (err) {
+      console.error('Erro ao buscar configurações:', err)
+      return null
+    }
+  }
+
+  // Salvar configurações da empresa
+  async function salvarConfiguracoes(config: Partial<EmpresaConfig>): Promise<boolean> {
+    if (!process.client) return false
+
+    try {
+      const supabase = useSupabaseClient()
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user?.id) {
+        console.log('Usuário não está logado')
+        return false
+      }
+
+      const { error } = await supabase
+        .from('empresas')
+        .update(config)
+        .eq('usuario_id', user.id)
+
+      if (error) {
+        console.error('Erro ao salvar configurações:', error)
+        return false
+      }
+
+      // Atualiza o nome da empresa no estado global se foi modificado
+      if (config.nome) {
+        nomeEmpresa.value = config.nome
+      }
+
+      return true
+      
+    } catch (err) {
+      console.error('Erro ao salvar configurações:', err)
+      return false
+    }
+  }
+
   return {
     nomeEmpresa: readonly(nomeEmpresa),
     isLoadingEmpresa: readonly(isLoadingEmpresa),
     buscarNomeEmpresa,
-    getEmpresaId
+    getEmpresaId,
+    buscarConfiguracoes,
+    salvarConfiguracoes
   }
 }

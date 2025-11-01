@@ -1,58 +1,8 @@
 <script setup lang="ts">
-// Interface do Cliente
-interface Cliente {
-  id: string
-  nome: string
-  telefone: string
-  qtdPedidos: number
-  ultimoPedido?: string
-}
+import type { Cliente } from '~/composables/useClientes'
 
-// Dados mock dos clientes
-const clientes = ref<Cliente[]>([
-  {
-    id: '1',
-    nome: 'João Silva',
-    telefone: '(11) 99999-1234',
-    qtdPedidos: 15,
-    ultimoPedido: '2024-03-10'
-  },
-  {
-    id: '2',
-    nome: 'Maria Santos',
-    telefone: '(11) 98888-5678',
-    qtdPedidos: 8,
-    ultimoPedido: '2024-03-09'
-  },
-  {
-    id: '3',
-    nome: 'Pedro Oliveira',
-    telefone: '(11) 97777-9876',
-    qtdPedidos: 23,
-    ultimoPedido: '2024-03-11'
-  },
-  {
-    id: '4',
-    nome: 'Ana Costa',
-    telefone: '(11) 96666-4321',
-    qtdPedidos: 12,
-    ultimoPedido: '2024-03-08'
-  },
-  {
-    id: '5',
-    nome: 'Carlos Ferreira',
-    telefone: '(11) 95555-8765',
-    qtdPedidos: 7,
-    ultimoPedido: '2024-03-07'
-  },
-  {
-    id: '6',
-    nome: 'Lucia Mendes',
-    telefone: '(11) 94444-2468',
-    qtdPedidos: 19,
-    ultimoPedido: '2024-03-12'
-  }
-])
+// Composable para buscar clientes
+const { clientes: clientesData, isLoading: carregandoClientes, buscarClientes } = useClientes()
 
 // Estados dos filtros
 const filtroNome = ref('')
@@ -60,7 +10,7 @@ const filtroTelefone = ref('')
 
 // Computed para clientes filtrados
 const clientesFiltrados = computed(() => {
-  let resultado = clientes.value
+  let resultado = clientesData.value
 
   // Filtrar por nome
   if (filtroNome.value.trim()) {
@@ -85,37 +35,28 @@ const limparFiltros = () => {
   filtroTelefone.value = ''
 }
 
-// Funções de ação (sem implementação de banco de dados)
+// Funções de ação
 const chamarWhatsApp = (cliente: Cliente) => {
-  // TODO: Implementar integração com WhatsApp
-  console.log('Chamar no WhatsApp:', cliente.nome, cliente.telefone)
-  
-  // Exemplo de como seria a integração (comentado para não executar)
-  // const numeroLimpo = cliente.telefone.replace(/\D/g, '')
-  // const mensagem = encodeURIComponent(`Olá ${cliente.nome}! Como você está?`)
-  // window.open(`https://wa.me/55${numeroLimpo}?text=${mensagem}`, '_blank')
-}
-
-const excluirCliente = (cliente: Cliente) => {
-  // TODO: Implementar exclusão no banco de dados
-  console.log('Excluir cliente:', cliente.nome)
-  
-  // Confirmação simples (pode ser substituída por modal no futuro)
-  const confirmacao = confirm(`Tem certeza que deseja excluir o cliente ${cliente.nome}?`)
-  
-  if (confirmacao) {
-    // Remove da lista local apenas (simulação)
-    const index = clientes.value.findIndex(c => c.id === cliente.id)
-    if (index > -1) {
-      clientes.value.splice(index, 1)
-      console.log(`Cliente ${cliente.nome} removido da interface`)
-    }
-  }
+  const numeroLimpo = cliente.telefone.replace(/\D/g, '')
+  const mensagem = encodeURIComponent(`Olá ${cliente.nome}! Tudo bem?`)
+  window.open(`https://wa.me/55${numeroLimpo}?text=${mensagem}`, '_blank')
 }
 
 // Função para formatar data
 const formatarData = (data: string) => {
-  return new Date(data).toLocaleDateString('pt-BR')
+  return new Date(data).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+}
+
+// Função para formatar valor
+const formatarValor = (valor: number) => {
+  return valor.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  })
 }
 
 // Composables para exportação
@@ -131,24 +72,17 @@ const exportarPDF = async () => {
   try {
     exportandoPDF.value = true
     
-    // Se há filtros aplicados, exporta apenas os filtrados
     const dadosParaExportar = (filtroNome.value || filtroTelefone.value) 
       ? clientesFiltrados.value 
       : null
 
-    const resultado = await exportarClientesPDF(clientes.value, dadosParaExportar)
+    const resultado = await exportarClientesPDF(clientesData.value, dadosParaExportar)
     
     if (resultado.success) {
-      // Feedback visual de sucesso
-      console.log(`PDF exportado: ${resultado.filename} com ${resultado.totalClientes} clientes`)
-      
-      // Log silencioso sem alerta do sistema
       console.info(`✅ PDF exportado com sucesso! Arquivo: ${resultado.filename} | Clientes: ${resultado.totalClientes}`)
     }
   } catch (error) {
     console.error('Erro ao exportar PDF:', error)
-    // Apenas log de erro, sem alerta
-    console.error('❌ Erro ao exportar PDF. Verifique o console para mais detalhes.')
   } finally {
     exportandoPDF.value = false
   }
@@ -159,28 +93,26 @@ const exportarExcel = async () => {
   try {
     exportandoExcel.value = true
     
-    // Se há filtros aplicados, exporta apenas os filtrados
     const dadosParaExportar = (filtroNome.value || filtroTelefone.value) 
       ? clientesFiltrados.value 
       : null
 
-    const resultado = await exportarClientesExcel(clientes.value, dadosParaExportar)
+    const resultado = await exportarClientesExcel(clientesData.value, dadosParaExportar)
     
     if (resultado.success) {
-      // Feedback visual de sucesso
-      console.log(`Excel exportado: ${resultado.filename} com ${resultado.totalClientes} clientes`)
-      
-      // Log silencioso sem alerta do sistema
       console.info(`✅ Excel exportado com sucesso! Arquivo: ${resultado.filename} | Clientes: ${resultado.totalClientes}`)
     }
   } catch (error) {
     console.error('Erro ao exportar Excel:', error)
-    // Apenas log de erro, sem alerta
-    console.error('❌ Erro ao exportar Excel. Verifique o console para mais detalhes.')
   } finally {
     exportandoExcel.value = false
   }
 }
+
+// Carregar clientes ao montar o componente
+onMounted(async () => {
+  await buscarClientes()
+})
 </script>
 
 <template>
@@ -191,14 +123,15 @@ const exportarExcel = async () => {
         <div>
           <h2 class="text-lg font-semibold text-foreground">Lista de Clientes</h2>
           <p class="text-sm text-muted-foreground">
-            Gerenciar clientes cadastrados ({{ clientesFiltrados.length }} de {{ clientes.length }} clientes)
+            <span v-if="carregandoClientes">Carregando...</span>
+            <span v-else>Gerenciar clientes cadastrados ({{ clientesFiltrados.length }} de {{ clientesData.length }} clientes)</span>
           </p>
         </div>
         <div class="flex items-center gap-3">
           <!-- Botão Exportar PDF -->
           <button
             @click="exportarPDF"
-            :disabled="exportandoPDF"
+            :disabled="exportandoPDF || carregandoClientes"
             class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm font-medium"
             :title="(filtroNome || filtroTelefone) ? 'Exportar clientes filtrados em PDF' : 'Exportar todos os clientes em PDF'"
           >
@@ -214,7 +147,7 @@ const exportarExcel = async () => {
           <!-- Botão Exportar Excel -->
           <button
             @click="exportarExcel"
-            :disabled="exportandoExcel"
+            :disabled="exportandoExcel || carregandoClientes"
             class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm font-medium"
             :title="(filtroNome || filtroTelefone) ? 'Exportar clientes filtrados em Excel' : 'Exportar todos os clientes em Excel'"
           >
@@ -290,7 +223,23 @@ const exportarExcel = async () => {
 
     <!-- Tabela de clientes -->
     <div class="overflow-x-auto">
-      <table class="w-full">
+      <!-- Estado de carregamento -->
+      <div v-if="carregandoClientes" class="flex items-center justify-center py-12">
+        <div class="text-center">
+          <font-awesome-icon icon="spinner" class="w-8 h-8 text-primary animate-spin mb-3" />
+          <p class="text-sm text-muted-foreground">Carregando clientes...</p>
+        </div>
+      </div>
+
+      <!-- Mensagem quando não há clientes -->
+      <div v-else-if="clientesData.length === 0" class="flex flex-col items-center justify-center py-12">
+        <font-awesome-icon icon="users" class="w-12 h-12 text-muted-foreground mb-3" />
+        <p class="text-foreground font-medium mb-1">Nenhum cliente encontrado</p>
+        <p class="text-sm text-muted-foreground">Os clientes aparecerão aqui quando houver pedidos registrados</p>
+      </div>
+
+      <!-- Tabela com dados -->
+      <table v-else class="w-full">
         <!-- Header da tabela -->
         <thead class="bg-muted/10">
           <tr>
@@ -304,6 +253,9 @@ const exportarExcel = async () => {
               Qtd. Pedidos
             </th>
             <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Valor Total
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Último Pedido
             </th>
             <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -314,7 +266,16 @@ const exportarExcel = async () => {
 
         <!-- Corpo da tabela -->
         <tbody class="divide-y divide-border">
+          <!-- Mensagem quando filtro não retorna resultados -->
+          <tr v-if="clientesFiltrados.length === 0">
+            <td colspan="6" class="px-6 py-8 text-center">
+              <font-awesome-icon icon="search" class="w-8 h-8 text-muted-foreground mb-2" />
+              <p class="text-muted-foreground">Nenhum cliente encontrado com os filtros aplicados</p>
+            </td>
+          </tr>
+
           <tr 
+            v-else
             v-for="cliente in clientesFiltrados" 
             :key="cliente.id"
             class="hover:bg-muted/5 transition-colors"
@@ -352,6 +313,13 @@ const exportarExcel = async () => {
               </div>
             </td>
 
+            <!-- Valor total -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-green-600">
+                {{ formatarValor(cliente.valorTotal) }}
+              </div>
+            </td>
+
             <!-- Último pedido -->
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm text-foreground" v-if="cliente.ultimoPedido">
@@ -368,19 +336,10 @@ const exportarExcel = async () => {
                 <!-- Botão WhatsApp -->
                 <button
                   @click="chamarWhatsApp(cliente)"
-                  class="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                  class="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                   title="Chamar no WhatsApp"
                 >
                   <font-awesome-icon icon="phone" class="w-4 h-4" />
-                </button>
-
-                <!-- Botão Excluir -->
-                <button
-                  @click="excluirCliente(cliente)"
-                  class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Excluir cliente"
-                >
-                  <font-awesome-icon icon="trash" class="w-4 h-4" />
                 </button>
               </div>
             </td>
@@ -393,16 +352,17 @@ const exportarExcel = async () => {
     <div class="bg-muted/10 border-t border-border px-6 py-3">
       <div class="flex items-center justify-between text-sm text-muted-foreground">
         <div>
-          <span v-if="filtroNome || filtroTelefone">
-            Mostrando {{ clientesFiltrados.length }} de {{ clientes.length }} cliente{{ clientes.length !== 1 ? 's' : '' }}
+          <span v-if="carregandoClientes">Carregando...</span>
+          <span v-else-if="filtroNome || filtroTelefone">
+            Mostrando {{ clientesFiltrados.length }} de {{ clientesData.length }} cliente{{ clientesData.length !== 1 ? 's' : '' }}
           </span>
           <span v-else>
-            Mostrando {{ clientes.length }} cliente{{ clientes.length !== 1 ? 's' : '' }}
+            Mostrando {{ clientesData.length }} cliente{{ clientesData.length !== 1 ? 's' : '' }}
           </span>
         </div>
         <div class="flex items-center gap-2">
           <font-awesome-icon icon="info-circle" class="text-xs" />
-          <span>Dados fictícios para demonstração</span>
+          <span>Dados do banco de dados</span>
         </div>
       </div>
     </div>

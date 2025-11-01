@@ -12,19 +12,12 @@
       class="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-background text-foreground z-50 shadow-2xl flex-col border-r border-border"
     >
       <!-- Header com nome da empresa -->
-      <div class="flex items-center p-4 border-b border-border">
-        <div class="flex items-center space-x-3">
-          <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 6a3 3 0 11-6 0 3 3 0 616 0zM18 8a2 2 0 11-4 0 2 2 0 414 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
-            </svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <h1 class="text-lg font-bold truncate">
-              {{ nomeEmpresa || 'Carregando...' }}
-            </h1>
-            <p class="text-xs text-muted-foreground">Sistema de Gestão</p>
-          </div>
+      <div class="flex items-center px-4 py-4 border-b border-border">
+        <div class="flex-1 min-w-0 pl-3">
+          <h1 class="text-lg font-bold truncate">
+            {{ nomeEmpresa || 'Carregando...' }}
+          </h1>
+          <p class="text-xs text-muted-foreground">Sistema de Gestão</p>
         </div>
       </div>
 
@@ -138,15 +131,17 @@
 
           <!-- Ajuda -->
           <li>
-            <button 
-              class="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
+            <NuxtLink 
+              to="/ajuda"
+              class="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted group relative"
+              :class="$route.path === '/ajuda' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'"
             >
               <font-awesome-icon 
                 icon="question-circle" 
                 class="w-5 h-5 mr-3" 
               />
               <span>Ajuda</span>
-            </button>
+            </NuxtLink>
           </li>
         </ul>
       </nav>
@@ -194,19 +189,12 @@
       class="lg:hidden fixed left-0 top-0 h-screen w-64 bg-background text-foreground z-50 shadow-2xl flex-col border-r border-border transition-transform duration-300 ease-in-out flex"
     >
       <!-- Header com nome da empresa e botão fechar -->
-      <div class="flex items-center justify-between p-4 border-b border-border">
-        <div class="flex items-center space-x-3 flex-1 min-w-0">
-          <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 6a3 3 0 11-6 0 3 3 0 616 0zM18 8a2 2 0 11-4 0 2 2 0 414 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
-            </svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <h1 class="text-lg font-bold truncate">
-              {{ nomeEmpresa || 'Carregando...' }}
-            </h1>
-            <p class="text-xs text-muted-foreground">Sistema de Gestão</p>
-          </div>
+      <div class="flex items-center justify-between px-4 py-4 border-b border-border">
+        <div class="flex-1 min-w-0 pl-3">
+          <h1 class="text-lg font-bold truncate">
+            {{ nomeEmpresa || 'Carregando...' }}
+          </h1>
+          <p class="text-xs text-muted-foreground">Sistema de Gestão</p>
         </div>
         
         <!-- Botão fechar -->
@@ -337,15 +325,18 @@
 
           <!-- Ajuda -->
           <li>
-            <button 
-              class="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
+            <NuxtLink 
+              to="/ajuda"
+              @click="$emit('close-mobile')"
+              class="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted group relative"
+              :class="$route.path === '/ajuda' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'"
             >
               <font-awesome-icon 
                 icon="question-circle" 
                 class="w-5 h-5 mr-3" 
               />
               <span>Ajuda</span>
-            </button>
+            </NuxtLink>
           </li>
         </ul>
       </nav>
