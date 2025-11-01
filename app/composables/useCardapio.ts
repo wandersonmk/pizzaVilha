@@ -95,7 +95,7 @@ export const useCardapio = () => {
       cardapioState.value.produtos = (data || []).map((prod: any) => ({
         id: prod.id,
         nome: prod.nome,
-        preco: prod.preco,
+        preco: prod.preco, // Mantém preco para produtos comuns e como fallback
         descricao: prod.descricao || '',
         foto: prod.foto || '',
         categoriaId: prod.categoria_id,
@@ -105,6 +105,9 @@ export const useCardapio = () => {
         ...(prod.tamanhos && { tamanhos: prod.tamanhos }),
         ...(prod.sabores && { sabores: prod.sabores })
       }))
+      
+      console.log('[useCardapio] Produtos carregados:', cardapioState.value.produtos.length)
+      console.log('[useCardapio] Produtos tipo pizza:', cardapioState.value.produtos.filter(p => p.tipo === 'pizza').length)
     } catch (e: any) {
       error.value = e.message
       console.error('Erro ao carregar produtos:', e)

@@ -108,12 +108,38 @@
             >
               <div class="flex items-start justify-between">
                 <div class="flex-1">
-                  <h4 class="font-medium text-foreground mb-1">{{ produto.nome }}</h4>
-                  <p v-if="produto.descricao" class="text-sm text-muted-foreground mb-2">{{ produto.descricao }}</p>
-                  <div class="flex items-center space-x-4">
-                    <span class="text-lg font-bold text-primary">
-                      R$ {{ produto.preco.toFixed(2).replace('.', ',') }}
+                  <div class="flex items-center gap-2 mb-1">
+                    <h4 class="font-medium text-foreground">{{ produto.nome }}</h4>
+                    <!-- Badge de tipo de produto -->
+                    <span 
+                      v-if="produto.tipo === 'pizza'"
+                      class="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 font-medium"
+                    >
+                      🍕 Pizza
                     </span>
+                  </div>
+                  <p v-if="produto.descricao" class="text-sm text-muted-foreground mb-2">{{ produto.descricao }}</p>
+                  
+                  <!-- Preços: se for pizza mostra todos os tamanhos, se não mostra preço único -->
+                  <div class="flex items-center space-x-4">
+                    <!-- Produto tipo pizza: mostrar tamanhos -->
+                    <div v-if="produto.tipo === 'pizza' && produto.tamanhos && Array.isArray(produto.tamanhos)" class="flex flex-wrap gap-2">
+                      <div 
+                        v-for="tamanho in produto.tamanhos" 
+                        :key="tamanho.tamanho"
+                        class="text-sm bg-primary/10 text-primary px-2 py-1 rounded"
+                      >
+                        <span class="font-bold">{{ tamanho.tamanho }}:</span> 
+                        R$ {{ Number(tamanho.preco).toFixed(2).replace('.', ',') }}
+                      </div>
+                    </div>
+                    
+                    <!-- Produto comum: mostrar preço único -->
+                    <span v-else class="text-lg font-bold text-primary">
+                      R$ {{ Number(produto.preco).toFixed(2).replace('.', ',') }}
+                    </span>
+                    
+                    <!-- Status -->
                     <span 
                       class="text-xs px-2 py-1 rounded-full"
                       :class="produto.ativo ? 'bg-green-500/10 text-green-400' : 'bg-destructive/10 text-destructive'"
@@ -338,8 +364,46 @@
             ></textarea>
           </div>
 
-          <!-- Preço -->
+          <!-- Tipo de Produto -->
           <div>
+            <label class="block text-sm font-medium text-foreground mb-2">
+              Tipo de Produto *
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                @click="formularioProduto.tipo = 'comum'"
+                :class="[
+                  'px-4 py-3 border-2 rounded-lg transition-all font-medium flex items-center justify-center gap-2',
+                  formularioProduto.tipo === 'comum' 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-border hover:border-primary/50 text-foreground'
+                ]"
+              >
+                <span class="text-xl">🍔</span>
+                Produto Comum
+              </button>
+              <button
+                type="button"
+                @click="formularioProduto.tipo = 'pizza'"
+                :class="[
+                  'px-4 py-3 border-2 rounded-lg transition-all font-medium flex items-center justify-center gap-2',
+                  formularioProduto.tipo === 'pizza' 
+                    ? 'border-orange-500 bg-orange-500/10 text-orange-600' 
+                    : 'border-border hover:border-orange-300 text-foreground'
+                ]"
+              >
+                <span class="text-xl">🍕</span>
+                Pizza
+              </button>
+            </div>
+            <p class="text-xs text-muted-foreground mt-2">
+              {{ formularioProduto.tipo === 'pizza' ? 'Pizzas têm preços por tamanho (P, M, G, F)' : 'Produtos comuns têm preço único' }}
+            </p>
+          </div>
+
+          <!-- Preço (Produto Comum) -->
+          <div v-if="formularioProduto.tipo === 'comum'">
             <label class="block text-sm font-medium text-foreground mb-2">
               Preço *
             </label>
@@ -355,6 +419,93 @@
                 class="w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="0,00"
               />
+            </div>
+          </div>
+
+          <!-- Preços por Tamanho (Pizza) -->
+          <div v-if="formularioProduto.tipo === 'pizza'" class="space-y-3">
+            <label class="block text-sm font-medium text-foreground mb-2">
+              Preços por Tamanho *
+            </label>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <!-- Tamanho P -->
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1">
+                  Pequena (P) - 4 fatias
+                </label>
+                <div class="relative">
+                  <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                  <input
+                    v-model="precosTamanhos.P"
+                    @input="formatarPrecoTamanho('P', $event)"
+                    type="text"
+                    required
+                    class="w-full pl-8 pr-2 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="0,00"
+                  />
+                </div>
+              </div>
+
+              <!-- Tamanho M -->
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1">
+                  Média (M) - 6 fatias
+                </label>
+                <div class="relative">
+                  <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                  <input
+                    v-model="precosTamanhos.M"
+                    @input="formatarPrecoTamanho('M', $event)"
+                    type="text"
+                    required
+                    class="w-full pl-8 pr-2 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="0,00"
+                  />
+                </div>
+              </div>
+
+              <!-- Tamanho G -->
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1">
+                  Grande (G) - 8 fatias
+                </label>
+                <div class="relative">
+                  <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                  <input
+                    v-model="precosTamanhos.G"
+                    @input="formatarPrecoTamanho('G', $event)"
+                    type="text"
+                    required
+                    class="w-full pl-8 pr-2 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="0,00"
+                  />
+                </div>
+              </div>
+
+              <!-- Tamanho F -->
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1">
+                  Família (F) - 8 fatias
+                </label>
+                <div class="relative">
+                  <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                  <input
+                    v-model="precosTamanhos.F"
+                    @input="formatarPrecoTamanho('F', $event)"
+                    type="text"
+                    required
+                    class="w-full pl-8 pr-2 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="0,00"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <p class="text-xs text-blue-800 dark:text-blue-400">
+                💡 <strong>Dica:</strong> Configure os 4 preços para que os clientes possam escolher o tamanho ideal na hora do pedido.
+              </p>
             </div>
           </div>
 
@@ -561,8 +712,16 @@ const formularioProduto = ref({
 const previewFoto = ref<string | null>(null)
 const inputFoto = ref<HTMLInputElement | null>(null)
 
-// Estado para o preço formatado
+// Estado para o preço formatado (produto comum)
 const precoFormatado = ref('')
+
+// Estados para preços dos tamanhos (pizza)
+const precosTamanhos = ref({
+  P: '',
+  M: '',
+  G: '',
+  F: ''
+})
 
 // Função para alternar estado da categoria (abrir/fechar)
 const toggleCategoria = (categoriaId: string) => {
@@ -613,8 +772,23 @@ const podeEditarCategoria = computed(() => {
 
 // Computed para validar se pode adicionar produto
 const podeAdicionarProduto = computed(() => {
-  return formularioProduto.value.nome.trim().length >= 2 && 
-         formularioProduto.value.preco > 0
+  const nomeValido = formularioProduto.value.nome.trim().length >= 2
+  
+  // Se for produto comum, validar preço único
+  if (formularioProduto.value.tipo === 'comum') {
+    return nomeValido && formularioProduto.value.preco > 0
+  }
+  
+  // Se for pizza, validar que todos os 4 tamanhos têm preço
+  if (formularioProduto.value.tipo === 'pizza') {
+    const todosPreenchidos = precosTamanhos.value.P !== '' && 
+                             precosTamanhos.value.M !== '' && 
+                             precosTamanhos.value.G !== '' && 
+                             precosTamanhos.value.F !== ''
+    return nomeValido && todosPreenchidos
+  }
+  
+  return false
 })
 
 // Função para resetar o formulário de produto
@@ -628,6 +802,7 @@ const resetarFormularioProduto = () => {
     foto: null
   }
   precoFormatado.value = ''
+  precosTamanhos.value = { P: '', M: '', G: '', F: '' }
   previewFoto.value = null
   modoEdicao.value = false
   produtoEditando.value = null
@@ -695,30 +870,62 @@ const salvarNovoProduto = () => {
   
   if (modoEdicao.value && produtoEditando.value) {
     // Modo edição - atualizar produto existente
-    const produtoAtualizado = {
+    const produtoAtualizado: any = {
       nome: formularioProduto.value.nome.trim(),
       descricao: formularioProduto.value.descricao.trim(),
-      preco: Number(formularioProduto.value.preco),
       tipo: formularioProduto.value.tipo,
       ativo: formularioProduto.value.ativo,
       // Manter a foto existente se não foi alterada, ou usar nova se foi
       foto: formularioProduto.value.foto ? 'foto-produto-' + Date.now() + '.jpg' : produtoEditando.value.foto
     }
     
-    // TODO: Implementar a edição do produto via composable
-    console.log('Editando produto:', produtoEditando.value.id, produtoAtualizado)
+    // Se for pizza, construir array de tamanhos JSONB
+    if (formularioProduto.value.tipo === 'pizza') {
+      produtoAtualizado.tamanhos = [
+        { tamanho: 'P', preco: parseFloat(precosTamanhos.value.P.replace(',', '.')) },
+        { tamanho: 'M', preco: parseFloat(precosTamanhos.value.M.replace(',', '.')) },
+        { tamanho: 'G', preco: parseFloat(precosTamanhos.value.G.replace(',', '.')) },
+        { tamanho: 'F', preco: parseFloat(precosTamanhos.value.F.replace(',', '.')) }
+      ]
+      // Para pizzas, também salvar preço (média) para compatibilidade
+      const precos = produtoAtualizado.tamanhos.map((t: any) => t.preco)
+      produtoAtualizado.preco = precos.reduce((sum: number, p: number) => sum + p, 0) / precos.length
+    } else {
+      // Se for produto comum, usar preço único
+      produtoAtualizado.preco = Number(formularioProduto.value.preco)
+    }
+    
+    // Editar o produto usando o composable
+    editarProdutoCardapio(produtoEditando.value.id, produtoAtualizado)
+    
+    console.log('Produto editado com sucesso:', produtoEditando.value.id, produtoAtualizado)
     console.log('Nova foto selecionada:', formularioProduto.value.foto ? 'Sim' : 'Não')
     
   } else {
     // Modo criação - criar novo produto
-    const novoProduto = {
+    const novoProduto: any = {
       nome: formularioProduto.value.nome.trim(),
       descricao: formularioProduto.value.descricao.trim(),
-      preco: Number(formularioProduto.value.preco),
       categoriaId: categoriaSelecionada.value.id,
       tipo: formularioProduto.value.tipo,
       ativo: formularioProduto.value.ativo,
       foto: formularioProduto.value.foto ? 'foto-produto-' + Date.now() + '.jpg' : undefined
+    }
+    
+    // Se for pizza, construir array de tamanhos JSONB
+    if (formularioProduto.value.tipo === 'pizza') {
+      novoProduto.tamanhos = [
+        { tamanho: 'P', preco: parseFloat(precosTamanhos.value.P.replace(',', '.')) },
+        { tamanho: 'M', preco: parseFloat(precosTamanhos.value.M.replace(',', '.')) },
+        { tamanho: 'G', preco: parseFloat(precosTamanhos.value.G.replace(',', '.')) },
+        { tamanho: 'F', preco: parseFloat(precosTamanhos.value.F.replace(',', '.')) }
+      ]
+      // Para pizzas, também salvar preço (média) para compatibilidade
+      const precos = novoProduto.tamanhos.map((t: any) => t.preco)
+      novoProduto.preco = precos.reduce((sum: number, p: number) => sum + p, 0) / precos.length
+    } else {
+      // Se for produto comum, usar preço único
+      novoProduto.preco = Number(formularioProduto.value.preco)
     }
     
     // Adicionar o produto usando o composable
@@ -731,7 +938,7 @@ const salvarNovoProduto = () => {
   fecharModalNovoProduto()
 }
 
-// Funções para formatação de preço
+// Funções para formatação de preço (produto comum)
 const formatarPreco = (event: Event) => {
   const input = event.target as HTMLInputElement
   let valor = input.value.replace(/\D/g, '') // Remove todos os caracteres não numéricos
@@ -748,6 +955,23 @@ const formatarPreco = (event: Event) => {
   
   // Formata para exibição brasileira
   precoFormatado.value = numeroValor.toFixed(2).replace('.', ',')
+}
+
+// Função para formatação de preço por tamanho (pizza)
+const formatarPrecoTamanho = (tamanho: 'P' | 'M' | 'G' | 'F', event: Event) => {
+  const input = event.target as HTMLInputElement
+  let valor = input.value.replace(/\D/g, '') // Remove todos os caracteres não numéricos
+  
+  if (valor === '') {
+    precosTamanhos.value[tamanho] = ''
+    return
+  }
+  
+  // Converte para número e divide por 100 para ter centavos
+  const numeroValor = parseInt(valor) / 100
+  
+  // Formata para exibição brasileira
+  precosTamanhos.value[tamanho] = numeroValor.toFixed(2).replace('.', ',')
 }
 
 // Funções para upload de foto
@@ -808,8 +1032,22 @@ const editarProduto = (produto: Produto) => {
     foto: null // Resetar o input de foto
   }
   
-  // Formatar o preço para exibição
-  precoFormatado.value = produto.preco.toFixed(2).replace('.', ',')
+  // Se for pizza, carregar os preços dos tamanhos
+  if (produto.tipo === 'pizza' && produto.tamanhos && Array.isArray(produto.tamanhos)) {
+    // Resetar preços
+    precosTamanhos.value = { P: '', M: '', G: '', F: '' }
+    
+    // Preencher com os valores do banco
+    produto.tamanhos.forEach((tamanho: any) => {
+      const preco = Number(tamanho.preco)
+      precosTamanhos.value[tamanho.tamanho as 'P' | 'M' | 'G' | 'F'] = preco.toFixed(2).replace('.', ',')
+    })
+  } else {
+    // Se for produto comum, formatar o preço único
+    precoFormatado.value = produto.preco.toFixed(2).replace('.', ',')
+    // Resetar preços de tamanhos
+    precosTamanhos.value = { P: '', M: '', G: '', F: '' }
+  }
   
   // Se o produto tem foto, não mostrar preview (pois é do banco)
   previewFoto.value = null

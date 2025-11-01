@@ -95,7 +95,18 @@ onMounted(async () => {
 // Computed
 const precoMedio = computed(() => {
   if (produtos.value.length === 0) return '0,00'
-  const soma = produtos.value.reduce((acc: number, produto: any) => acc + produto.preco, 0)
+  
+  const soma = produtos.value.reduce((acc: number, produto: any) => {
+    // Se for pizza com tamanhos, usar preço médio dos tamanhos
+    if (produto.tipo === 'pizza' && produto.tamanhos && Array.isArray(produto.tamanhos)) {
+      const precosTamanhos = produto.tamanhos.map((t: any) => Number(t.preco))
+      const mediaTamanhos = precosTamanhos.reduce((sum: number, p: number) => sum + p, 0) / precosTamanhos.length
+      return acc + mediaTamanhos
+    }
+    // Se for produto comum, usar preço direto
+    return acc + Number(produto.preco)
+  }, 0)
+  
   const media = soma / produtos.value.length
   return media.toFixed(2).replace('.', ',')
 })
