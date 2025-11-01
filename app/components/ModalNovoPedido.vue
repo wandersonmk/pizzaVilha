@@ -550,6 +550,28 @@
                 </div>
               </div>
 
+              <!-- Tempo Estimado -->
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1">
+                  Tempo Estimado (minutos) *
+                </label>
+                <select
+                  v-model="form.tempo_estimado"
+                  required
+                  class="w-full px-3 py-2 bg-secondary border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Selecione...</option>
+                  <option value="15">15 minutos</option>
+                  <option value="20">20 minutos</option>
+                  <option value="30">30 minutos</option>
+                  <option value="40">40 minutos</option>
+                  <option value="45">45 minutos</option>
+                  <option value="60">1 hora</option>
+                  <option value="90">1 hora e 30 min</option>
+                  <option value="120">2 horas</option>
+                </select>
+              </div>
+
               <div v-if="form.forma_pagamento === 'dinheiro'">
                 <label class="block text-sm font-medium text-foreground mb-1">
                   Troco para
@@ -691,6 +713,7 @@ const form = ref({
   endereco_entrega: '',
   forma_pagamento: '',
   tipo_retirada: '',
+  tempo_estimado: '30', // Valor padrão de 30 minutos
   troco: null as number | null,
   observacao: ''
 })
@@ -1183,6 +1206,7 @@ const criarPedido = async () => {
         valor_entrega: valorEntregaNumero.value || null,
         forma_pagamento: form.value.forma_pagamento,
         tipo_retirada: form.value.tipo_retirada,
+        tempo_estimado: parseInt(form.value.tempo_estimado),
         troco: form.value.troco,
         observacao: form.value.observacao || null,
         status: 'novo'

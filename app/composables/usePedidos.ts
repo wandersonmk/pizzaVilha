@@ -19,6 +19,7 @@ interface PedidoSupabase {
   forma_pagamento: 'dinheiro' | 'cartao'
   tipo_retirada: 'retirada' | 'entrega'
   troco?: string
+  tempo_estimado?: number
   status: 'novo' | 'cozinha' | 'entrega' | 'concluido'
   created_at: string
   updated_at: string
@@ -164,7 +165,7 @@ export const usePedidos = () => {
       troco: pedidoSupabase.troco ? parseFloat(pedidoSupabase.troco) : undefined,
       dataHora: new Date(pedidoSupabase.created_at),
       updatedAt: new Date(pedidoSupabase.updated_at),
-      tempoEstimado: 30 // Default de 30 minutos
+      tempoEstimado: pedidoSupabase.tempo_estimado || 30 // Usa o valor do banco ou 30 minutos como padrão
     }
   }
 
