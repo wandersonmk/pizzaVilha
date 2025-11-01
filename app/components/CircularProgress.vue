@@ -55,39 +55,49 @@
     <div>
       <div class="flex justify-between text-sm mb-2">
         <span class="text-gray-400 uppercase tracking-wide">LIMITE</span>
-        <span class="text-foreground font-medium">{{ monthlyUsed }}/{{ monthlyLimit }}</span>
+        <span class="text-foreground font-medium">{{ monthlyUsed }}/∞</span>
       </div>
       <div class="relative h-3 bg-muted rounded-full overflow-hidden">
         <div 
           class="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-2000 ease-out"
-          :style="{ width: `${monthlyPercentage}%` }"
+          :style="{ width: '100%' }"
         ></div>
         <!-- Indicador pontinho -->
         <div 
           class="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 border-purple-500 shadow-lg transition-all duration-2000 ease-out"
-          :style="{ left: `calc(${monthlyPercentage}% - 8px)` }"
+          :style="{ left: 'calc(100% - 8px)' }"
         ></div>
       </div>
       <div class="flex justify-center text-xs text-gray-400 mt-2">
-        <span>O seu plano permite {{ monthlyLimit }} pedidos por mês</span>
+        <span>O seu plano permite pedidos ilimitados</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// Dados do gráfico de clientes
-const totalClientes = 687
-const monthlyLimit = 1000
-const monthlyUsed = 687
+// Obter estatísticas reais
+const { stats, fetchStats } = useDashboardStats()
+
+// Buscar dados quando o componente for montado
+onMounted(async () => {
+  await fetchStats()
+  setTimeout(() => {
+    animateProgress()
+  }, 300)
+})
+
+// Computed properties para usar dados reais
+const totalClientes = computed(() => stats.value.totalClientes)
+const monthlyUsed = computed(() => stats.value.totalPedidos)
 
 // Estados reativos para animação
 const currentPercentage = ref(0)
 const displayTotal = ref(0)
 const monthlyPercentage = ref(0)
 
-// Calcular percentual baseado na meta mensal
-const targetPercentage = Math.round((monthlyUsed / monthlyLimit) * 100)
+// Calcular percentual sempre como 100% (ilimitado)
+const targetPercentage = 100
 
 // Cálculos do círculo
 const radius = 40
@@ -111,7 +121,7 @@ const animateProgress = () => {
     const easeOut = 1 - Math.pow(1 - progress, 3)
     
     currentPercentage.value = easeOut * targetPercentage
-    displayTotal.value = Math.round(easeOut * totalClientes)
+    displayTotal.value = Math.round(easeOut * totalClientes.value)
     
     if (progress < 1) {
       requestAnimationFrame(animate1)
@@ -122,7 +132,7 @@ const animateProgress = () => {
   setTimeout(() => {
     const duration2 = 2000
     const startTime2 = Date.now()
-    const targetMonthly = (monthlyUsed / monthlyLimit) * 100
+    const targetMonthly = 100 // Sempre 100% para ilimitado
     
     const animate2 = () => {
       const elapsed = Date.now() - startTime2
@@ -141,11 +151,4 @@ const animateProgress = () => {
   
   animate1()
 }
-
-// Iniciar animação quando o componente for montado
-onMounted(() => {
-  setTimeout(() => {
-    animateProgress()
-  }, 300)
-})
 </script>
