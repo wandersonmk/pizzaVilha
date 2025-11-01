@@ -25,7 +25,7 @@
     <!-- Content -->
     <div v-else>
     <!-- Header com filtros e estatísticas rápidas -->
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
       <div class="flex gap-2">
         <button
           v-for="status in statusFilters"
