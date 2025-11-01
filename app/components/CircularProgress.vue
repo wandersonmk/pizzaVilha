@@ -88,7 +88,7 @@ onMounted(async () => {
 })
 
 // Computed properties para usar dados reais
-const totalClientes = computed(() => stats.value.totalClientes)
+const totalPedidos = computed(() => stats.value.totalPedidos)
 const monthlyUsed = computed(() => stats.value.totalPedidos)
 
 // Estados reativos para animação
@@ -121,7 +121,7 @@ const animateProgress = () => {
     const easeOut = 1 - Math.pow(1 - progress, 3)
     
     currentPercentage.value = easeOut * targetPercentage
-    displayTotal.value = Math.round(easeOut * totalClientes.value)
+    displayTotal.value = Math.round(easeOut * totalPedidos.value)
     
     if (progress < 1) {
       requestAnimationFrame(animate1)
