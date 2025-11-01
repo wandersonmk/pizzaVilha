@@ -79,6 +79,8 @@ const pageTitle = computed(() => {
       return 'Cardápio'
     case '/clientes':
       return 'Clientes'
+    case '/relatorios':
+      return 'Relatórios'
     case '/ajuste-da-ia':
       return 'Ajuste da IA'
     default:
@@ -96,6 +98,8 @@ const pageDescription = computed(() => {
       return 'Gerencie itens e categorias do cardápio'
     case '/clientes':
       return 'Gerencie todos os seus clientes'
+    case '/relatorios':
+      return 'Análise e controle de pedidos'
     case '/ajuste-da-ia':
       return 'Configure as configurações de inteligência artificial'
     default:

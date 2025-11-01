@@ -76,7 +76,7 @@
         </div>
       </div>
 
-      <!-- Filtros Adicionais -->
+      <!-- Filtros Adicionais com Botões -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <!-- Filtro por Forma de Pagamento -->
         <div>
@@ -112,23 +112,14 @@
           </select>
         </div>
 
-        <!-- Filtro por Valor -->
+        <!-- Slot para Botões de Ação -->
         <div>
-          <label for="valorMinimo" class="block text-sm font-medium text-foreground mb-2">
-            Valor Mínimo
+          <label class="block text-sm font-medium text-foreground mb-2">
+            Exportar Dados
           </label>
-          <AppInput
-            id="valorMinimo"
-            v-model="filtrosLocal.valorMinimo"
-            type="number"
-            step="0.01"
-            placeholder="R$ 0,00"
-            @input="aplicarFiltros"
-          >
-            <template #icon>
-              <i class="fas fa-dollar-sign text-muted-foreground"></i>
-            </template>
-          </AppInput>
+          <slot name="acoes">
+            <!-- Botões customizados virão aqui -->
+          </slot>
         </div>
       </div>
 
@@ -202,15 +193,6 @@
             <i class="fas fa-eraser mr-2"></i>
             Limpar Filtros
           </AppButton>
-
-          <AppButton
-            variant="primary"
-            size="sm"
-            @click="exportarResultados"
-          >
-            <i class="fas fa-download mr-2"></i>
-            Exportar
-          </AppButton>
         </div>
       </div>
     </div>
@@ -228,7 +210,6 @@ interface Filtros {
   nomeCliente?: string
   formaPagamento?: string
   tipoRetirada?: string
-  valorMinimo?: string
 }
 
 // Props
@@ -243,7 +224,6 @@ const props = withDefaults(defineProps<Props>(), {
 // Emits
 const emit = defineEmits<{
   'update:modelValue': [value: Filtros]
-  'export': [filtros: Filtros]
 }>()
 
 // State
@@ -276,10 +256,6 @@ const removerFiltro = (filtro: keyof Filtros) => {
 const limparFiltros = () => {
   filtrosLocal.value = {}
   aplicarFiltros()
-}
-
-const exportarResultados = () => {
-  emit('export', { ...filtrosLocal.value })
 }
 
 const formatDateForDisplay = (dateString: string) => {

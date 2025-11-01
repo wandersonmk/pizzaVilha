@@ -200,7 +200,179 @@ export const usePDFExport = () => {
     }
   }
 
+  const exportarRelatoriosPDF = async (pedidos: any[], estatisticas: any) => {
+    // Verificar se está no cliente
+    if (typeof window === 'undefined') {
+      throw new Error('PDF export only available on client side')
+    }
+
+    try {
+      const jsPDF = (await import('jspdf')).default
+      
+      // Criar nova instância do jsPDF em orientação horizontal
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      })
+      
+      console.log('Exportando relatórios:', pedidos.length, 'pedidos')
+      
+      // Configurações do documento
+      const margin = 15
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      
+      // Título
+      doc.setFontSize(20)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Relatório de Pedidos', margin, 20)
+      
+      // Data do relatório
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      const dataAtual = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+      doc.text(`Gerado em: ${dataAtual}`, margin, 30)
+      
+      // Linha separadora
+      doc.setDrawColor(200, 200, 200)
+      doc.line(margin, 35, pageWidth - margin, 35)
+      
+      // Estatísticas resumidas
+      let yPosition = 45
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Resumo Geral', margin, yPosition)
+      
+      yPosition += 10
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.text(`Total de Pedidos: ${estatisticas?.totalPedidos || 0}`, margin, yPosition)
+      doc.text(`Valor Total: R$ ${(estatisticas?.totalValor || 0).toFixed(2).replace('.', ',')}`, margin + 70, yPosition)
+      doc.text(`Ticket Médio: R$ ${(estatisticas?.ticketMedio || 0).toFixed(2).replace('.', ',')}`, margin + 140, yPosition)
+      
+      // Linha separadora
+      yPosition += 7
+      doc.line(margin, yPosition, pageWidth - margin, yPosition)
+      
+      // Tabela de pedidos
+      yPosition += 10
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Lista de Pedidos', margin, yPosition)
+      
+      yPosition += 8
+      
+      // Cabeçalho da tabela
+      doc.setFillColor(230, 230, 230)
+      doc.rect(margin, yPosition - 5, pageWidth - 2 * margin, 7, 'F')
+      
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('#', margin + 2, yPosition)
+      doc.text('Cliente', margin + 12, yPosition)
+      doc.text('Telefone', margin + 60, yPosition)
+      doc.text('Pedido', margin + 95, yPosition)
+      doc.text('Pagamento', margin + 165, yPosition)
+      doc.text('Tipo', margin + 205, yPosition)
+      doc.text('Valor', margin + 230, yPosition)
+      doc.text('Data', margin + 255, yPosition)
+      
+      yPosition += 10
+      doc.setFont('helvetica', 'normal')
+      
+      // Dados dos pedidos
+      pedidos.forEach((pedido, index) => {
+        // Verificar se precisa de nova página
+        if (yPosition > pageHeight - 30) {
+          doc.addPage()
+          yPosition = 20
+          
+          // Repetir cabeçalho
+          doc.setFillColor(230, 230, 230)
+          doc.rect(margin, yPosition - 5, pageWidth - 2 * margin, 7, 'F')
+          doc.setFont('helvetica', 'bold')
+          doc.text('#', margin + 2, yPosition)
+          doc.text('Cliente', margin + 12, yPosition)
+          doc.text('Telefone', margin + 60, yPosition)
+          doc.text('Pedido', margin + 95, yPosition)
+          doc.text('Pagamento', margin + 165, yPosition)
+          doc.text('Tipo', margin + 205, yPosition)
+          doc.text('Valor', margin + 230, yPosition)
+          doc.text('Data', margin + 255, yPosition)
+          yPosition += 10
+          doc.setFont('helvetica', 'normal')
+        }
+        
+        // Zebrar linhas
+        if (index % 2 === 0) {
+          doc.setFillColor(250, 250, 250)
+          doc.rect(margin, yPosition - 5, pageWidth - 2 * margin, 7, 'F')
+        }
+        
+        // Dados
+        const numeroPedido = pedido.numero_pedido || '-'
+        const nomeCliente = pedido.nome_cliente || '-'
+        const telefone = pedido.telefone_cliente || '-'
+        const pedidoTexto = (pedido.pedido || '').substring(0, 30) + '...'
+        const pagamento = pedido.forma_pagamento === 'dinheiro' ? 'Dinheiro' : pedido.forma_pagamento === 'cartao' ? 'Cartão' : '-'
+        const tipo = pedido.tipo_retirada === 'entrega' ? 'Entrega' : 'Retirada'
+        const valorTotal = parseFloat(pedido.valor_total || 0) + parseFloat(pedido.valor_entrega || 0)
+        const dataPedido = pedido.created_at 
+          ? new Date(pedido.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+          : '-'
+        
+        doc.setFontSize(8)
+        doc.text(`${numeroPedido}`, margin + 2, yPosition)
+        doc.text(nomeCliente.substring(0, 20), margin + 12, yPosition)
+        doc.text(telefone, margin + 60, yPosition)
+        doc.text(pedidoTexto, margin + 95, yPosition)
+        doc.text(pagamento, margin + 165, yPosition)
+        doc.text(tipo, margin + 205, yPosition)
+        doc.text(`R$ ${valorTotal.toFixed(2).replace('.', ',')}`, margin + 230, yPosition)
+        doc.text(dataPedido, margin + 255, yPosition)
+        
+        yPosition += 7
+      })
+      
+      // Rodapé em todas as páginas
+      const totalPages = doc.internal.pages.length - 1
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i)
+        const footerY = pageHeight - 10
+        doc.setFontSize(8)
+        doc.setTextColor(128, 128, 128)
+        doc.text(`Página ${i} de ${totalPages}`, margin, footerY)
+        doc.text(`${pedidos.length} pedidos exportados`, pageWidth - margin - 60, footerY)
+      }
+      
+      // Nome do arquivo
+      const timestamp = new Date().toISOString().split('T')[0]
+      const nomeArquivo = `relatorio-pedidos-${timestamp}.pdf`
+      
+      // Salvar o PDF
+      doc.save(nomeArquivo)
+      
+      return {
+        success: true,
+        filename: nomeArquivo,
+        totalPedidos: pedidos.length
+      }
+      
+    } catch (error) {
+      console.error('Erro ao gerar PDF de relatório:', error)
+      throw new Error('Falha ao gerar o PDF do relatório')
+    }
+  }
+
   return {
-    exportarClientesPDF
+    exportarClientesPDF,
+    exportarRelatoriosPDF
   }
 }

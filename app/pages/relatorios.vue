@@ -1,73 +1,102 @@
-<template>
+﻿<template>
   <div class="w-full">
-    <!-- Header com Indicadores (Desktop) -->
-    <div class="hidden md:flex items-center justify-between mb-8">
-      <div class="flex items-center">
-        <i class="fas fa-chart-bar text-2xl text-blue-600 mr-3"></i>
-        <div>
-          <h1 class="text-xl font-semibold text-foreground">Relatórios</h1>
-          <p class="text-sm text-muted-foreground">Análise e controle de pedidos</p>
+    <!-- Cards de Métricas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <!-- Card Total de Pedidos -->
+      <div class="relative bg-gradient-to-br from-card via-green-950/10 to-card text-card-foreground rounded-lg border border-green-800/20 shadow-sm hover:shadow-md hover:shadow-green-500/10 transition-all duration-300 p-6 group overflow-hidden">
+        <!-- Efeito de brilho sutil -->
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Total de Pedidos</p>
+            <p class="text-3xl font-bold text-foreground">{{ totalPedidos }}</p>
+            <p class="text-xs text-green-600 mt-1">registrados</p>
+          </div>
+          <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-lg">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+          </div>
         </div>
       </div>
 
-      <!-- Indicadores Rápidos (Desktop) -->
-      <div class="flex items-center space-x-6">
-        <div class="text-center">
-          <div class="text-2xl font-bold text-green-600">{{ totalPedidos }}</div>
-          <div class="text-xs text-muted-foreground">Total Pedidos</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-blue-600">
-            R$ {{ totalValor.toFixed(2).replace('.', ',') }}
+      <!-- Card Valor Total -->
+      <div class="relative bg-gradient-to-br from-card via-blue-950/10 to-card text-card-foreground rounded-lg border border-blue-800/20 shadow-sm hover:shadow-md hover:shadow-blue-500/10 transition-all duration-300 p-6 group overflow-hidden">
+        <!-- Efeito de brilho sutil -->
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Valor Total</p>
+            <p class="text-3xl font-bold text-foreground">R$ {{ totalValor.toFixed(2).replace('.', ',') }}</p>
+            <p class="text-xs text-blue-600 mt-1">faturado</p>
           </div>
-          <div class="text-xs text-muted-foreground">Valor Total</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-purple-600">
-            R$ {{ ticketMedio.toFixed(2).replace('.', ',') }}
+          <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
           </div>
-          <div class="text-xs text-muted-foreground">Ticket Médio</div>
+        </div>
+      </div>
+
+      <!-- Card Ticket Médio -->
+      <div class="relative bg-gradient-to-br from-card via-purple-950/10 to-card text-card-foreground rounded-lg border border-purple-800/20 shadow-sm hover:shadow-md hover:shadow-purple-500/10 transition-all duration-300 p-6 group overflow-hidden">
+        <!-- Efeito de brilho sutil -->
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Ticket Médio</p>
+            <p class="text-3xl font-bold text-foreground">R$ {{ ticketMedio.toFixed(2).replace('.', ',') }}</p>
+            <p class="text-xs text-purple-600 mt-1">por pedido</p>
+          </div>
+          <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Filtros -->
     <div class="mb-6">
-      <FiltrosPedidos 
-        v-model="filtros"
-        @export="exportarRelatorio"
-      />
-    </div>
+      <FiltrosPedidos v-model="filtros">
+        <template #acoes>
+          <div class="flex gap-2">
+            <button
+              @click="exportarPDF"
+              :disabled="isExportingPDF || isExportingExcel"
+              class="group relative flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Exportar relatório em PDF"
+            >
+              <i v-if="!isExportingPDF" class="fas fa-file-pdf"></i>
+              <i v-else class="fas fa-spinner fa-spin"></i>
+              <span class="font-medium text-sm">{{ isExportingPDF ? 'Gerando...' : 'PDF' }}</span>
+            </button>
 
-    <!-- Cards de Resumo (Mobile) -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 md:hidden">
-      <div class="bg-card rounded-lg shadow-sm border border-border p-4 text-center">
-        <div class="text-lg font-bold text-green-600">{{ totalPedidos }}</div>
-        <div class="text-sm text-muted-foreground">Total Pedidos</div>
-      </div>
-      <div class="bg-card rounded-lg shadow-sm border border-border p-4 text-center">
-        <div class="text-lg font-bold text-blue-600">
-          R$ {{ totalValor.toFixed(2).replace('.', ',') }}
-        </div>
-        <div class="text-sm text-muted-foreground">Valor Total</div>
-      </div>
-      <div class="bg-card rounded-lg shadow-sm border border-border p-4 text-center">
-        <div class="text-lg font-bold text-purple-600">
-          R$ {{ ticketMedio.toFixed(2).replace('.', ',') }}
-        </div>
-        <div class="text-sm text-muted-foreground">Ticket Médio</div>
-      </div>
+            <button
+              @click="exportarExcel"
+              :disabled="isExportingPDF || isExportingExcel"
+              class="group relative flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Exportar relatório em Excel"
+            >
+              <i v-if="!isExportingExcel" class="fas fa-file-excel"></i>
+              <i v-else class="fas fa-spinner fa-spin"></i>
+              <span class="font-medium text-sm">{{ isExportingExcel ? 'Gerando...' : 'Excel' }}</span>
+            </button>
+          </div>
+        </template>
+      </FiltrosPedidos>
     </div>
 
     <!-- Tabela de Pedidos - Container com largura máxima removida -->
     <div class="mb-8">
       <TabelaPedidos 
-        :pedidos="pedidosMock"
+        :pedidos="pedidos"
         :filtros="filtros"
       />
     </div>
 
-    <!-- Cards de Análise -->
+    <!-- Cards de AnÃ¡lise -->
     <div class="max-w-7xl mx-auto">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Top Clientes -->
@@ -95,7 +124,7 @@
         </div>
       </div>
 
-      <!-- Análise de Pagamentos -->
+      <!-- AnÃ¡lise de Pagamentos -->
       <div class="bg-card rounded-lg shadow-sm border border-border">
         <div class="px-6 py-4 border-b border-border">
           <h3 class="text-lg font-semibold text-foreground">
@@ -122,12 +151,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import type { EstatisticasRelatorio } from '~/composables/useRelatorios'
 
 // Layout
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth'
+})
+
+// Definir título da página
+useHead({
+  title: 'Relatórios'
 })
 
 // Interfaces
@@ -138,442 +172,78 @@ interface Filtros {
   nomeCliente?: string
   formaPagamento?: string
   tipoRetirada?: string
-  valorMinimo?: string
-}
-
-interface Pedido {
-  id: string
-  numero_pedido: number
-  nome_cliente: string
-  endereco_entrega?: string
-  telefone_cliente?: string
-  pedido: string
-  observacao?: string
-  valor_total: number
-  valor_entrega?: number
-  forma_pagamento: 'dinheiro' | 'cartao'
-  tipo_retirada: 'retirada' | 'entrega'
-  troco?: number
-  created_at: string
 }
 
 // State
 const filtros = ref<Filtros>({})
+const isExportingPDF = ref(false)
+const isExportingExcel = ref(false)
 
-// Mock de dados para demonstração
-const pedidosMock = ref<Pedido[]>([
-  {
-    id: '1',
-    numero_pedido: 1001,
-    nome_cliente: 'João Silva',
-    endereco_entrega: 'Rua das Flores, 123',
-    telefone_cliente: '(11) 99999-9999',
-    pedido: 'Pizza Margherita G, Coca-Cola 2L (x2)',
-    observacao: 'Sem cebola na pizza',
-    valor_total: 51.90,
-    valor_entrega: 5.00,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'entrega',
-    troco: 60.00,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    numero_pedido: 1002,
-    nome_cliente: 'Maria Santos',
-    telefone_cliente: '(11) 88888-8888',
-    pedido: 'Hambúrguer Artesanal (x2), Batata Frita',
-    valor_total: 63.80,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'retirada',
-    created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString()
-  },
-  {
-    id: '3',
-    numero_pedido: 1003,
-    nome_cliente: 'Pedro Costa',
-    endereco_entrega: 'Av. Principal, 456',
-    telefone_cliente: '(11) 77777-7777',
-    pedido: 'Lasanha Bolonhesa',
-    valor_total: 28.90,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'entrega',
-    valor_entrega: 3.50,
-    created_at: new Date(Date.now() - 45 * 60 * 1000).toISOString()
-  },
-  {
-    id: '4',
-    numero_pedido: 1004,
-    nome_cliente: 'Ana Paula',
-    endereco_entrega: 'Rua Verde, 789',
-    telefone_cliente: '(11) 66666-6666',
-    pedido: 'Esfiha de Carne (x3), Suco de Laranja',
-    valor_total: 28.50,
-    valor_entrega: 4.00,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '5',
-    numero_pedido: 1005,
-    nome_cliente: 'João Silva',
-    pedido: 'Pastel de Queijo (x2), Guaraná 1L',
-    telefone_cliente: '(11) 99999-9999',
-    valor_total: 17.50,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    troco: 20.00,
-    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 1 dia atrás
-  {
-    id: '6',
-    numero_pedido: 1006,
-    nome_cliente: 'Carlos Lima',
-    endereco_entrega: 'Rua dos Pássaros, 321',
-    telefone_cliente: '(11) 55555-5555',
-    pedido: 'Pizza Calabresa M, Refrigerante Lata',
-    valor_total: 34.90,
-    valor_entrega: 4.50,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '7',
-    numero_pedido: 1007,
-    nome_cliente: 'Fernanda Souza',
-    telefone_cliente: '(11) 44444-4444',
-    pedido: 'Açaí 500ml com morango',
-    valor_total: 15.90,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    troco: 20.00,
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 - 3 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 3 dias atrás
-  {
-    id: '8',
-    numero_pedido: 1008,
-    nome_cliente: 'Ricardo Pereira',
-    endereco_entrega: 'Av. Central, 987',
-    telefone_cliente: '(11) 33333-3333',
-    pedido: 'X-Tudo, Batata Frita G, Coca-Cola 2L',
-    valor_total: 47.80,
-    valor_entrega: 6.00,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '9',
-    numero_pedido: 1009,
-    nome_cliente: 'Juliana Martins',
-    telefone_cliente: '(11) 22222-2222',
-    pedido: 'Salada Caesar, Suco Natural',
-    valor_total: 23.50,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    troco: 25.00,
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 4 dias atrás (12/09/2025)
-  {
-    id: '24',
-    numero_pedido: 1024,
-    nome_cliente: 'Marcos Silva',
-    endereco_entrega: 'Rua do Comércio, 456',
-    telefone_cliente: '(11) 99998-7777',
-    pedido: 'Pizza Pepperoni M, Coca-Cola Lata',
-    valor_total: 36.90,
-    valor_entrega: 4.50,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '25',
-    numero_pedido: 1025,
-    nome_cliente: 'Sofia Lima',
-    telefone_cliente: '(11) 88887-6666',
-    pedido: 'Hambúrguer Vegetariano, Batata Doce',
-    valor_total: 42.50,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    troco: 50.00,
-    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000 - 3 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 5 dias atrás (11/09/2025)
-  {
-    id: '10',
-    numero_pedido: 1010,
-    nome_cliente: 'Roberto Silva',
-    endereco_entrega: 'Rua das Palmeiras, 654',
-    telefone_cliente: '(11) 11111-1111',
-    pedido: 'Pizza Portuguesa G, Guaraná 2L',
-    valor_total: 59.90,
-    valor_entrega: 5.50,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '11',
-    numero_pedido: 1011,
-    nome_cliente: 'Carla Santos',
-    telefone_cliente: '(11) 99998-8888',
-    pedido: 'Sanduíche Natural, Água',
-    valor_total: 12.90,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 - 1 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 6 dias atrás (10/09/2025)
-  {
-    id: '26',
-    numero_pedido: 1026,
-    nome_cliente: 'Daniel Oliveira',
-    endereco_entrega: 'Av. Brasil, 789',
-    telefone_cliente: '(11) 77776-5555',
-    pedido: 'Pizza Margherita G, Refrigerante 2L',
-    valor_total: 48.90,
-    valor_entrega: 5.00,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '27',
-    numero_pedido: 1027,
-    nome_cliente: 'Beatriz Costa',
-    telefone_cliente: '(11) 66665-4444',
-    pedido: 'Wrap de Frango, Suco de Maracujá',
-    valor_total: 24.80,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    troco: 30.00,
-    created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 7 dias atrás (1 semana)
-  {
-    id: '12',
-    numero_pedido: 1012,
-    nome_cliente: 'Eduardo Costa',
-    endereco_entrega: 'Rua do Sol, 147',
-    telefone_cliente: '(11) 77776-6666',
-    pedido: 'Pizza Quatro Queijos M, Coca-Cola Lata',
-    observacao: 'Massa fina',
-    valor_total: 38.90,
-    valor_entrega: 4.00,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '13',
-    numero_pedido: 1013,
-    nome_cliente: 'Patrícia Lima',
-    telefone_cliente: '(11) 55554-4444',
-    pedido: 'Misto Quente (x2), Café',
-    valor_total: 16.80,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    troco: 20.00,
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 - 4 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 10 dias atrás
-  {
-    id: '14',
-    numero_pedido: 1014,
-    nome_cliente: 'Marcos Oliveira',
-    endereco_entrega: 'Av. das Nações, 852',
-    telefone_cliente: '(11) 33332-2222',
-    pedido: 'Hambúrguer Bacon, Batata Rústica, Milkshake',
-    valor_total: 54.70,
-    valor_entrega: 7.00,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '15',
-    numero_pedido: 1015,
-    nome_cliente: 'Luciana Ferreira',
-    telefone_cliente: '(11) 99997-7777',
-    pedido: 'Wrap de Frango, Suco de Uva',
-    valor_total: 21.40,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    troco: 25.00,
-    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 15 dias atrás
-  {
-    id: '16',
-    numero_pedido: 1016,
-    nome_cliente: 'Antonio Ribeiro',
-    endereco_entrega: 'Rua da Esperança, 741',
-    telefone_cliente: '(11) 88887-7777',
-    pedido: 'Pizza Frango com Catupiry G, Guaraná Lata (x2)',
-    valor_total: 45.80,
-    valor_entrega: 5.00,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '17',
-    numero_pedido: 1017,
-    nome_cliente: 'Renata Almeida',
-    telefone_cliente: '(11) 66665-5555',
-    pedido: 'Coxinha (x4), Refrigerante',
-    valor_total: 18.60,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000 - 3 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 20 dias atrás
-  {
-    id: '18',
-    numero_pedido: 1018,
-    nome_cliente: 'Gabriel Santos',
-    endereco_entrega: 'Rua Nova, 159',
-    telefone_cliente: '(11) 44443-3333',
-    pedido: 'Pizza Vegetariana M, Água com Gás',
-    observacao: 'Sem azeitona',
-    valor_total: 32.90,
-    valor_entrega: 3.50,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '19',
-    numero_pedido: 1019,
-    nome_cliente: 'Isabela Costa',
-    telefone_cliente: '(11) 22221-1111',
-    pedido: 'Pão de Açúcar, Café Expresso',
-    valor_total: 8.90,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000 - 1 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 25 dias atrás
-  {
-    id: '20',
-    numero_pedido: 1020,
-    nome_cliente: 'Thiago Moreira',
-    endereco_entrega: 'Av. Paulista, 963',
-    telefone_cliente: '(11) 99996-6666',
-    pedido: 'Pizza Suprema G, Coca-Cola 2L, Sorvete',
-    valor_total: 68.70,
-    valor_entrega: 8.00,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '21',
-    numero_pedido: 1021,
-    nome_cliente: 'Amanda Silva',
-    telefone_cliente: '(11) 77775-5555',
-    pedido: 'Tapioca de Queijo, Suco de Laranja',
-    valor_total: 14.50,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    troco: 15.00,
-    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000).toISOString()
-  },
-  // Pedidos de 30 dias atrás (1 mês)
-  {
-    id: '22',
-    numero_pedido: 1022,
-    nome_cliente: 'Leonardo Dias',
-    endereco_entrega: 'Rua dos Anjos, 258',
-    telefone_cliente: '(11) 55554-4444',
-    pedido: 'Pizza Napolitana M, Guaraná 2L',
-    observacao: 'Massa grossa',
-    valor_total: 42.90,
-    valor_entrega: 4.50,
-    forma_pagamento: 'cartao',
-    tipo_retirada: 'entrega',
-    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '23',
-    numero_pedido: 1023,
-    nome_cliente: 'Vanessa Rocha',
-    telefone_cliente: '(11) 33332-2222',
-    pedido: 'Vitamina de Banana, Pão Integral',
-    valor_total: 11.80,
-    forma_pagamento: 'dinheiro',
-    tipo_retirada: 'retirada',
-    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000 - 1 * 60 * 60 * 1000).toISOString()
-  }
-])
+// Composables
+const { estatisticas, pedidosDetalhados, isLoading, buscarEstatisticas } = useRelatorios()
+const { exportarRelatoriosPDF } = usePDFExport()
+const { exportarRelatoriosExcel } = useExcelExport()
+const { showToast } = useToastSafe()
 
 // Computed
-const totalPedidos = computed(() => pedidosMock.value.length)
-
-const totalValor = computed(() => {
-  return pedidosMock.value.reduce((total, pedido) => {
-    return total + pedido.valor_total + (pedido.valor_entrega || 0)
-  }, 0)
-})
-
-const ticketMedio = computed(() => {
-  return totalPedidos.value > 0 ? totalValor.value / totalPedidos.value : 0
-})
-
-const topClientes = computed(() => {
-  const clientesMap = new Map()
-  
-  pedidosMock.value.forEach(pedido => {
-    const nome = pedido.nome_cliente
-    if (clientesMap.has(nome)) {
-      const cliente = clientesMap.get(nome)
-      cliente.pedidos++
-      cliente.valor += pedido.valor_total + (pedido.valor_entrega || 0)
-    } else {
-      clientesMap.set(nome, {
-        nome,
-        pedidos: 1,
-        valor: pedido.valor_total + (pedido.valor_entrega || 0)
-      })
-    }
-  })
-  
-  return Array.from(clientesMap.values())
-    .sort((a, b) => b.valor - a.valor)
-    .slice(0, 5)
-})
-
-const analisePagamentos = computed(() => {
-  const dinheiro = pedidosMock.value.filter(p => p.forma_pagamento === 'dinheiro').length
-  const cartao = pedidosMock.value.filter(p => p.forma_pagamento === 'cartao').length
-  const total = pedidosMock.value.length
-  
-  return [
-    {
-      tipo: 'dinheiro',
-      label: 'Dinheiro',
-      pedidos: dinheiro,
-      percentual: total > 0 ? Math.round((dinheiro / total) * 100) : 0
-    },
-    {
-      tipo: 'cartao',
-      label: 'Cartão',
-      pedidos: cartao,
-      percentual: total > 0 ? Math.round((cartao / total) * 100) : 0
-    }
-  ]
-})
+const totalPedidos = computed(() => estatisticas.value?.totalPedidos || 0)
+const totalValor = computed(() => estatisticas.value?.totalValor || 0)
+const ticketMedio = computed(() => estatisticas.value?.ticketMedio || 0)
+const topClientes = computed(() => estatisticas.value?.topClientes || [])
+const analisePagamentos = computed(() => estatisticas.value?.analisePagamentos || [])
+const pedidos = computed(() => pedidosDetalhados.value || [])
 
 // Methods
-const exportarRelatorio = (filtrosExport: Filtros) => {
-  // Implementar lógica de exportação
-  console.log('Exportando relatório com filtros:', filtrosExport)
-  // Aqui você pode usar os composables useExcelExport ou usePDFExport
+const carregarDados = async () => {
+  await buscarEstatisticas()
 }
+
+// Função para exportar em PDF
+const exportarPDF = async () => {
+  try {
+    if (!pedidos.value || pedidos.value.length === 0) {
+      showToast('Nenhum pedido para exportar', 'warning')
+      return
+    }
+
+    isExportingPDF.value = true
+    const resultado = await exportarRelatoriosPDF(pedidos.value, estatisticas.value)
+    
+    if (resultado.success) {
+      showToast(`PDF gerado com sucesso! ${resultado.totalPedidos} pedidos exportados.`, 'success')
+    }
+  } catch (error) {
+    console.error('Erro ao exportar PDF:', error)
+    showToast('Erro ao gerar PDF. Tente novamente.', 'error')
+  } finally {
+    isExportingPDF.value = false
+  }
+}
+
+// Função para exportar em Excel
+const exportarExcel = async () => {
+  try {
+    if (!pedidos.value || pedidos.value.length === 0) {
+      showToast('Nenhum pedido para exportar', 'warning')
+      return
+    }
+
+    isExportingExcel.value = true
+    const resultado = await exportarRelatoriosExcel(pedidos.value, estatisticas.value)
+    
+    if (resultado.success) {
+      showToast(`Excel gerado com sucesso! ${resultado.totalPedidos} pedidos exportados.`, 'success')
+    }
+  } catch (error) {
+    console.error('Erro ao exportar Excel:', error)
+    showToast('Erro ao gerar Excel. Tente novamente.', 'error')
+  } finally {
+    isExportingExcel.value = false
+  }
+}
+
+// Lifecycle
+onMounted(async () => {
+  await carregarDados()
+})
 </script>
