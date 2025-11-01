@@ -52,7 +52,9 @@ import {
   faFileExcel,
   faPrint,
   faCheck,
-  faHistory
+  faHistory,
+  faEye,
+  faEyeSlash
 } from '@fortawesome/free-solid-svg-icons'
 
 // Importar ícones de marca (brands)
@@ -117,7 +119,9 @@ library.add(
   faFileExcel,
   faPrint,
   faCheck,
-  faHistory
+  faHistory,
+  faEye,
+  faEyeSlash
 )
 
 export default defineNuxtPlugin((nuxtApp) => {

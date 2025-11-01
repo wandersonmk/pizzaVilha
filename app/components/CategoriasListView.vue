@@ -104,7 +104,8 @@
             <div 
               v-for="produto in getProdutosFiltrados(categoria.id)" 
               :key="produto.id"
-              class="bg-muted/20 rounded-lg p-4 border border-border"
+              class="rounded-lg p-4 border bg-muted/20"
+              :class="produto.ativo ? 'border-border' : 'border-amber-500/30'"
             >
               <div class="flex items-start justify-between">
                 <div class="flex-1">
@@ -117,6 +118,13 @@
                     >
                       🍕 Pizza
                     </span>
+                    <!-- Badge de status -->
+                    <span 
+                      class="text-xs px-2 py-0.5 rounded-full font-medium"
+                      :class="produto.ativo ? 'bg-green-500/10 text-green-400' : 'bg-destructive/20 text-destructive'"
+                    >
+                      {{ produto.ativo ? '✓ Disponível' : '⚠️ Indisponível' }}
+                    </span>
                   </div>
                   <p v-if="produto.descricao" class="text-sm text-muted-foreground mb-2">{{ produto.descricao }}</p>
                   
@@ -127,7 +135,8 @@
                       <div 
                         v-for="tamanho in produto.tamanhos" 
                         :key="tamanho.tamanho"
-                        class="text-sm bg-primary/10 text-primary px-2 py-1 rounded"
+                        class="text-sm px-2 py-1 rounded"
+                        :class="produto.ativo ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'"
                       >
                         <span class="font-bold">{{ tamanho.tamanho }}:</span> 
                         R$ {{ Number(tamanho.preco).toFixed(2).replace('.', ',') }}
@@ -135,16 +144,8 @@
                     </div>
                     
                     <!-- Produto comum: mostrar preço único -->
-                    <span v-else class="text-lg font-bold text-primary">
+                    <span v-else class="text-lg font-bold" :class="produto.ativo ? 'text-primary' : 'text-muted-foreground'">
                       R$ {{ Number(produto.preco).toFixed(2).replace('.', ',') }}
-                    </span>
-                    
-                    <!-- Status -->
-                    <span 
-                      class="text-xs px-2 py-1 rounded-full"
-                      :class="produto.ativo ? 'bg-green-500/10 text-green-400' : 'bg-destructive/10 text-destructive'"
-                    >
-                      {{ produto.ativo ? 'Disponível' : 'Indisponível' }}
                     </span>
                   </div>
                 </div>
@@ -159,8 +160,18 @@
                     <font-awesome-icon icon="edit" class="w-4 h-4" />
                   </button>
                   <button
+                    class="p-2 rounded-lg transition-colors"
+                    :class="produto.ativo 
+                      ? 'text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10' 
+                      : 'text-muted-foreground hover:text-green-500 hover:bg-green-500/10'"
+                    :title="produto.ativo ? 'Desativar produto' : 'Ativar produto'"
+                    @click="toggleStatusProduto(produto)"
+                  >
+                    <font-awesome-icon :icon="produto.ativo ? 'eye-slash' : 'eye'" class="w-4 h-4" />
+                  </button>
+                  <button
                     class="p-2 text-muted-foreground hover:text-destructive hover:bg-destructiveSurface rounded-lg transition-colors"
-                    title="Excluir produto"
+                    title="Excluir produto permanentemente"
                     @click="excluirProduto(produto)"
                   >
                     <font-awesome-icon icon="trash" class="w-4 h-4" />
@@ -635,13 +646,18 @@
 
       <div class="mb-6">
         <p class="text-foreground mb-2">
-          Tem certeza que deseja excluir o produto:
+          Tem certeza que deseja excluir permanentemente o produto:
         </p>
         <div class="bg-muted/20 rounded-lg p-3 border border-border">
           <h4 class="font-medium text-foreground">{{ produtoExcluindo.nome }}</h4>
-          <p class="text-sm text-muted-foreground">{{ produtoExcluindo.descricao }}</p>
+          <p v-if="produtoExcluindo.descricao" class="text-sm text-muted-foreground">{{ produtoExcluindo.descricao }}</p>
           <p class="text-sm font-semibold text-primary mt-1">
             R$ {{ produtoExcluindo.preco.toFixed(2).replace('.', ',') }}
+          </p>
+        </div>
+        <div class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <p class="text-xs text-amber-800 dark:text-amber-400">
+            💡 <strong>Dica:</strong> Se você quer apenas desativar temporariamente, use o botão de olho (👁️) em vez de excluir.
           </p>
         </div>
       </div>
@@ -658,7 +674,7 @@
           class="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors flex items-center gap-2"
         >
           <font-awesome-icon icon="trash" class="w-4 h-4" />
-          Excluir Produto
+          Excluir Permanentemente
         </button>
       </div>
     </div>
@@ -690,7 +706,7 @@ const categoriaExcluindo = ref<Categoria | null>(null)
 const nomeEdicao = ref('')
 const statusEdicao = ref(true)
 
-// Estados do modal de confirmação de exclusão de produto
+// Estados do modal de exclusão de produto
 const produtoExcluindo = ref<Produto | null>(null)
 const modalExclusaoProdutoAberto = ref(false)
 
@@ -1057,7 +1073,6 @@ const editarProduto = (produto: Produto) => {
 }
 
 const excluirProduto = (produto: Produto) => {
-  // Abrir modal de confirmação
   produtoExcluindo.value = produto
   modalExclusaoProdutoAberto.value = true
 }
@@ -1070,15 +1085,17 @@ const fecharModalExclusaoProduto = () => {
 
 const confirmarExclusaoProduto = () => {
   if (produtoExcluindo.value) {
-    // Remover o produto usando a função do composable
     removerProduto(produtoExcluindo.value.id)
-    
-    // Log opcional para debug
-    console.log(`Produto "${produtoExcluindo.value.nome}" foi removido da interface`)
-    
-    // Fechar o modal
+    console.log(`Produto "${produtoExcluindo.value.nome}" foi removido`)
     fecharModalExclusaoProduto()
   }
+}
+
+// Função para alternar status do produto (ativar/desativar)
+const toggleStatusProduto = async (produto: Produto) => {
+  const novoStatus = !produto.ativo
+  await editarProdutoCardapio(produto.id, { ativo: novoStatus })
+  console.log(`Produto "${produto.nome}" ${novoStatus ? 'ativado' : 'desativado'}`)
 }
 </script>
 

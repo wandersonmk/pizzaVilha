@@ -87,7 +87,7 @@ export const useCardapio = () => {
         .from('produtos')
         .select('*')
         .eq('empresa_id', empresaId)
-        .eq('ativo', true)
+        // Removido filtro .eq('ativo', true) para carregar todos os produtos
 
       if (supabaseError) throw supabaseError
 
@@ -126,7 +126,7 @@ export const useCardapio = () => {
 
   // Getters
   const categorias = computed(() => cardapioState.value.categorias.filter(c => c.ativa).sort((a, b) => a.ordem - b.ordem))
-  const produtos = computed(() => cardapioState.value.produtos.filter(p => p.ativo))
+  const produtos = computed(() => cardapioState.value.produtos) // Retorna todos os produtos, incluindo inativos
 
   // Funções para categorias
   const adicionarCategoria = async (categoria: Omit<Categoria, 'id'>) => {
@@ -235,9 +235,21 @@ export const useCardapio = () => {
       
       // Recarregar produtos
       await carregarProdutos()
+      
+      // Toast de sucesso
+      const toast = await useToastSafe()
+      if (toast) {
+        toast.success(`Produto "${produto.nome}" adicionado com sucesso!`)
+      }
     } catch (e: any) {
       error.value = e.message
       console.error('Erro ao adicionar produto:', e)
+      
+      // Toast de erro
+      const toast = await useToastSafe()
+      if (toast) {
+        toast.error(`Erro ao adicionar produto: ${e.message}`)
+      }
     } finally {
       loading.value = false
     }
@@ -268,9 +280,27 @@ export const useCardapio = () => {
       
       // Recarregar produtos
       await carregarProdutos()
+      
+      // Toast de sucesso (verifica se é alteração de status ou edição completa)
+      const toast = await useToastSafe()
+      if (toast) {
+        if (dadosAtualizados.ativo !== undefined && Object.keys(dadosAtualizados).length === 1) {
+          // Apenas mudança de status
+          toast.success(dadosAtualizados.ativo ? 'Produto ativado!' : 'Produto desativado!')
+        } else {
+          // Edição completa
+          toast.success('Produto atualizado com sucesso!')
+        }
+      }
     } catch (e: any) {
       error.value = e.message
       console.error('Erro ao editar produto:', e)
+      
+      // Toast de erro
+      const toast = await useToastSafe()
+      if (toast) {
+        toast.error(`Erro ao editar produto: ${e.message}`)
+      }
     } finally {
       loading.value = false
     }
@@ -279,19 +309,31 @@ export const useCardapio = () => {
   const removerProduto = async (id: string) => {
     try {
       loading.value = true
-      // Soft delete - apenas desativa
+      // DELETE permanente do banco de dados
       const { error: supabaseError } = await supabase
         .from('produtos')
-        .update({ ativo: false })
+        .delete()
         .eq('id', id)
 
       if (supabaseError) throw supabaseError
       
       // Recarregar produtos
       await carregarProdutos()
+      
+      // Toast de sucesso
+      const toast = await useToastSafe()
+      if (toast) {
+        toast.success('Produto excluído permanentemente!')
+      }
     } catch (e: any) {
       error.value = e.message
       console.error('Erro ao remover produto:', e)
+      
+      // Toast de erro
+      const toast = await useToastSafe()
+      if (toast) {
+        toast.error(`Erro ao excluir produto: ${e.message}`)
+      }
     } finally {
       loading.value = false
     }
