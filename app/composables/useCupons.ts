@@ -1,6 +1,22 @@
 import type { Cupom, CupomFormData } from '../../shared/types/cupom.types'
 
 export const useCupons = () => {
+  // Só executar no cliente
+  if (process.server) {
+    return {
+      cupons: computed(() => []),
+      loading: computed(() => false),
+      error: computed(() => null),
+      carregarCupons: async () => {},
+      criarCupom: async () => false,
+      atualizarCupom: async () => false,
+      toggleStatus: async () => false,
+      removerCupom: async () => false,
+      duplicarCupom: async () => false,
+      validarCupom: async () => ({ valido: false, mensagem: 'Servidor' })
+    }
+  }
+  
   const supabase = useSupabaseClient()
   
   // Estado reativo dos cupons
