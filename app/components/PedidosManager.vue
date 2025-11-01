@@ -289,39 +289,27 @@ const getOrdersByStatus = (status: string) => {
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase().trim()
     
-    // Debug: ver estrutura dos pedidos
-    if (pedidos.length > 0) {
-      console.log('[Filtro Debug] Exemplo de pedido:', pedidos[0])
-      console.log('[Filtro Debug] Query:', query)
-    }
-    
     pedidos = pedidos.filter(pedido => {
       // Buscar por número do pedido
-      if (pedido.numero && pedido.numero.toString().includes(query)) {
-        console.log('[Filtro] Match por número:', pedido.numero)
-        return true
-      }
+      const matchNumero = pedido.numero && pedido.numero.toString().includes(query)
       
       // Buscar por nome do cliente
-      if (pedido.cliente && pedido.cliente.toLowerCase().includes(query)) {
-        console.log('[Filtro] Match por cliente:', pedido.cliente)
-        return true
-      }
+      const clienteLower = pedido.cliente ? pedido.cliente.toLowerCase() : ''
+      const matchCliente = clienteLower.includes(query)
       
       // Buscar por telefone (remove caracteres especiais)
+      // Só busca no telefone se a query tiver números
+      let matchTelefone = false
       if (pedido.telefone) {
-        const telefoneClean = pedido.telefone.replace(/\D/g, '')
         const queryClean = query.replace(/\D/g, '')
-        if (telefoneClean.includes(queryClean)) {
-          console.log('[Filtro] Match por telefone:', pedido.telefone)
-          return true
+        if (queryClean.length > 0) { // Só busca se tiver números na query
+          const telefoneClean = pedido.telefone.replace(/\D/g, '')
+          matchTelefone = telefoneClean.includes(queryClean)
         }
       }
       
-      return false
+      return matchNumero || matchCliente || matchTelefone
     })
-    
-    console.log('[Filtro] Pedidos filtrados:', pedidos.length)
   }
   
   return pedidos
