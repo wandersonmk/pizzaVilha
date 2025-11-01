@@ -123,7 +123,9 @@ export const usePedidos = () => {
           const quantidade = parseInt(matchSemPreco[1])
           // Remove qualquer parte que pareça preço do nome (caso tenha sobrado)
           const nome = matchSemPreco[2].trim().replace(/\s+-\s+R\$\s+[\d,\.]+$/, '')
-          const precoEstimado = parseFloat(pedidoSupabase.valor_total) / itemsTexto.length
+          // Subtrai a taxa de entrega antes de calcular o preço estimado
+          const valorSemEntrega = parseFloat(pedidoSupabase.valor_total) - parseFloat(pedidoSupabase.valor_entrega || '0')
+          const precoEstimado = valorSemEntrega / itemsTexto.length
           
           items.push({
             nome,
@@ -134,10 +136,12 @@ export const usePedidos = () => {
         } else {
           // Sem padrão "Nx" - assumir 1 item
           const nomeLimpo = itemTexto.trim().replace(/\s+-\s+R\$\s+[\d,\.]+$/, '')
+          // Subtrai a taxa de entrega antes de calcular o preço estimado
+          const valorSemEntrega = parseFloat(pedidoSupabase.valor_total) - parseFloat(pedidoSupabase.valor_entrega || '0')
           items.push({
             nome: nomeLimpo,
             quantidade: 1,
-            preco: parseFloat(pedidoSupabase.valor_total) / itemsTexto.length,
+            preco: valorSemEntrega / itemsTexto.length,
             observacao: undefined
           })
         }
@@ -151,7 +155,7 @@ export const usePedidos = () => {
       telefone: formatTelefone(pedidoSupabase.telefone_cliente),
       endereco: pedidoSupabase.endereco_entrega || undefined,
       items,
-      total: parseFloat(pedidoSupabase.valor_total) + parseFloat(pedidoSupabase.valor_entrega || '0'),
+      total: parseFloat(pedidoSupabase.valor_total),
       valorEntrega: pedidoSupabase.valor_entrega ? parseFloat(pedidoSupabase.valor_entrega) : undefined,
       formaPagamento: pedidoSupabase.forma_pagamento,
       tipoEntrega: pedidoSupabase.tipo_retirada,

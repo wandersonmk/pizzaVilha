@@ -102,10 +102,21 @@
                 {{ getPaymentLabel(pedido?.formaPagamento || '') }}
               </span>
               <div v-if="pedido?.troco" class="mt-2 space-y-1">
-                <p class="text-sm text-muted-foreground">Troco para: R$ {{ pedido.troco.toFixed(2) }}</p>
-                <div class="p-2 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-800 rounded-md">
+                <p class="text-sm text-muted-foreground">Troco para: R$ {{ Number(pedido.troco).toFixed(2) }}</p>
+                <div 
+                  v-if="Number(pedido.troco) > Number(pedido.total)"
+                  class="p-2 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-800 rounded-md"
+                >
                   <p class="text-sm text-green-700 dark:text-green-400 font-medium">
-                    💰 Troco: R$ {{ (pedido.troco - pedido.total).toFixed(2) }}
+                    💰 Troco: R$ {{ (Number(pedido.troco) - Number(pedido.total)).toFixed(2) }}
+                  </p>
+                </div>
+                <div 
+                  v-else
+                  class="p-2 bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-800 rounded-md"
+                >
+                  <p class="text-sm text-blue-700 dark:text-blue-400 font-medium">
+                    ℹ️ Não precisa de troco
                   </p>
                 </div>
               </div>
@@ -477,8 +488,11 @@ const printPedido = () => {
         <div><strong>Pagamento:</strong> ${getPaymentLabel(props.pedido.formaPagamento).toUpperCase()}</div>
         <div><strong>Tipo:</strong> ${props.pedido.tipoEntrega === 'entrega' ? 'ENTREGA' : 'RETIRADA'}</div>
         ${props.pedido.troco ? `
-          <div><strong>Troco para:</strong> R$ ${props.pedido.troco.toFixed(2)}</div>
-          <div><strong>Troco:</strong> R$ ${(props.pedido.troco - props.pedido.total).toFixed(2)}</div>
+          <div><strong>Troco para:</strong> R$ ${Number(props.pedido.troco).toFixed(2)}</div>
+          ${Number(props.pedido.troco) > Number(props.pedido.total) 
+            ? `<div><strong>Troco:</strong> R$ ${(Number(props.pedido.troco) - Number(props.pedido.total)).toFixed(2)}</div>`
+            : `<div><strong>Não precisa de troco</strong></div>`
+          }
         ` : ''}
         ${props.pedido.tempoEstimado ? `<div><strong>Tempo estimado:</strong> ${props.pedido.tempoEstimado} min</div>` : ''}
       </div>
