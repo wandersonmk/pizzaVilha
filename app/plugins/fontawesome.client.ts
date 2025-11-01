@@ -55,7 +55,10 @@ import {
   faHistory,
   faEye,
   faEyeSlash,
-  faTicket
+  faTicket,
+  faCalendar,
+  faClock,
+  faCopy
 } from '@fortawesome/free-solid-svg-icons'
 
 // Importar ícones de marca (brands)
@@ -124,7 +127,10 @@ library.add(
   faEye,
   faEyeSlash,
   faTicket,
-  faWhatsapp
+  faWhatsapp,
+  faCalendar,
+  faClock,
+  faCopy
 )
 
 export default defineNuxtPlugin((nuxtApp) => {

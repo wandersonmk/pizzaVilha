@@ -2,12 +2,21 @@ import type { Cupom, CupomFormData } from '../../shared/types/cupom.types'
 
 export const useCupons = () => {
   const supabase = useSupabaseClient()
-  const toast = useToastSafe()
   
   // Estado reativo dos cupons
   const cupons = useState<Cupom[]>('cupons', () => [])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  
+  // Helper para mostrar toasts
+  const showToast = async (type: 'success' | 'error', message: string) => {
+    if (process.client) {
+      const toast = await useToastSafe()
+      if (toast && toast[type]) {
+        toast[type](message)
+      }
+    }
+  }
 
   // Carregar cupons do banco
   const carregarCupons = async () => {
@@ -45,7 +54,7 @@ export const useCupons = () => {
     } catch (e: any) {
       console.error('Erro ao carregar cupons:', e)
       error.value = e.message || 'Erro ao carregar cupons'
-      toast.error('Erro ao carregar cupons')
+      await showToast('error', 'Erro ao carregar cupons')
       return []
     } finally {
       loading.value = false
@@ -77,7 +86,7 @@ export const useCupons = () => {
 
       if (supabaseError) throw supabaseError
 
-      toast.success('Cupom criado com sucesso!')
+      await showToast('success', 'Cupom criado com sucesso!')
       await carregarCupons()
       return true
     } catch (e: any) {
@@ -86,9 +95,9 @@ export const useCupons = () => {
       
       // Tratar erro de código duplicado
       if (e.code === '23505') {
-        toast.error('Este código de cupom já existe!')
+        await showToast('error', 'Este código de cupom já existe!')
       } else {
-        toast.error('Erro ao criar cupom')
+        await showToast('error', 'Erro ao criar cupom')
       }
       return false
     } finally {
@@ -120,7 +129,7 @@ export const useCupons = () => {
 
       if (supabaseError) throw supabaseError
 
-      toast.success('Cupom atualizado com sucesso!')
+      await showToast('success', 'Cupom atualizado com sucesso!')
       await carregarCupons()
       return true
     } catch (e: any) {
@@ -128,9 +137,9 @@ export const useCupons = () => {
       error.value = e.message || 'Erro ao atualizar cupom'
       
       if (e.code === '23505') {
-        toast.error('Este código de cupom já existe!')
+        await showToast('error', 'Este código de cupom já existe!')
       } else {
-        toast.error('Erro ao atualizar cupom')
+        await showToast('error', 'Erro ao atualizar cupom')
       }
       return false
     } finally {
@@ -153,12 +162,12 @@ export const useCupons = () => {
 
       if (supabaseError) throw supabaseError
 
-      toast.success(novoStatus ? 'Cupom ativado!' : 'Cupom desativado!')
+      await showToast('success', novoStatus ? 'Cupom ativado!' : 'Cupom desativado!')
       await carregarCupons()
       return true
     } catch (e: any) {
       console.error('Erro ao alterar status do cupom:', e)
-      toast.error('Erro ao alterar status do cupom')
+      await showToast('error', 'Erro ao alterar status do cupom')
       return false
     }
   }
@@ -176,13 +185,13 @@ export const useCupons = () => {
 
       if (supabaseError) throw supabaseError
 
-      toast.success('Cupom removido com sucesso!')
+      await showToast('success', 'Cupom removido com sucesso!')
       await carregarCupons()
       return true
     } catch (e: any) {
       console.error('Erro ao remover cupom:', e)
       error.value = e.message || 'Erro ao remover cupom'
-      toast.error('Erro ao remover cupom')
+      await showToast('error', 'Erro ao remover cupom')
       return false
     } finally {
       loading.value = false
@@ -223,13 +232,13 @@ export const useCupons = () => {
 
       if (supabaseError) throw supabaseError
 
-      toast.success('Cupom duplicado com sucesso!')
+      await showToast('success', 'Cupom duplicado com sucesso!')
       await carregarCupons()
       return true
     } catch (e: any) {
       console.error('Erro ao duplicar cupom:', e)
       error.value = e.message || 'Erro ao duplicar cupom'
-      toast.error('Erro ao duplicar cupom')
+      await showToast('error', 'Erro ao duplicar cupom')
       return false
     } finally {
       loading.value = false
