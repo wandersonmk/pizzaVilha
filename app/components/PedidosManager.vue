@@ -413,13 +413,14 @@ const printOrder = (pedido: Pedido) => {
         
         body {
           font-family: 'Courier New', monospace;
-          font-size: 12px;
+          font-size: 14px;
           line-height: 1.2;
           margin: 0;
           padding: 8px;
           width: 72mm;
           color: #000;
           background: #fff;
+          font-weight: 400;
         }
         
         .header {
@@ -430,7 +431,7 @@ const printOrder = (pedido: Pedido) => {
         }
         
         .restaurant-name {
-          font-size: 16px;
+          font-size: 18px;
           font-weight: bold;
           margin-bottom: 4px;
         }
@@ -447,12 +448,15 @@ const printOrder = (pedido: Pedido) => {
         .section-title {
           font-weight: bold;
           margin-bottom: 4px;
+          font-size: 14px;
         }
         
         .item-line {
           display: flex;
           justify-content: space-between;
           margin-bottom: 2px;
+          font-weight: 400;
+          font-size: 14px;
         }
         
         .item-wrapper {
@@ -470,16 +474,20 @@ const printOrder = (pedido: Pedido) => {
         
         .item-name {
           flex: 1;
+          font-weight: 400;
+          font-size: 14px;
         }
         
         .item-price {
           text-align: right;
           min-width: 60px;
+          font-weight: 400;
+          font-size: 14px;
         }
         
         .total-line {
           font-weight: bold;
-          font-size: 14px;
+          font-size: 16px;
           border-top: 1px solid #000;
           padding-top: 4px;
           margin-top: 8px;
@@ -497,6 +505,8 @@ const printOrder = (pedido: Pedido) => {
           padding: 4px;
           margin: 4px 0;
           border-left: 2px solid #666;
+          font-weight: 400;
+          font-size: 14px;
         }
         
         @media screen {
@@ -510,8 +520,10 @@ const printOrder = (pedido: Pedido) => {
     </head>
     <body>
       <div class="header">
-        <div class="restaurant-name">PIZZAVILHA</div>
-        <div>Tel: (75) 9918-7953</div>
+        <div style="font-size: 12px; margin-bottom: 4px;">CUPOM NAO FISCAL</div>
+        <div class="restaurant-name">Pizza'Vilha</div>
+        <div style="font-size: 12px;">Plataforma: Pizza'Vilha</div>
+        <div style="font-size: 11px; margin-top: 2px;">CNPJ: 54.534.693/0001-21</div>
       </div>
       
       <div class="section">
