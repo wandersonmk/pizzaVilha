@@ -55,19 +55,13 @@
                   />
                 </div>
               </div>
-
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1">
-                  Endereço de Entrega
-                </label>
-                <input
-                  v-model="form.endereco_entrega"
-                  type="text"
-                  placeholder="Rua, número, bairro (deixe vazio para retirada)"
-                  class="w-full px-3 py-2 bg-secondary border border-input rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
             </div>
+
+            <!-- Endereço com Autocomplete -->
+            <EnderecoAutocomplete 
+              @update:endereco="form.endereco_entrega = $event"
+              @update:tipo-entrega="form.tipo_retirada = $event"
+            />
 
             <!-- Pedido -->
             <div class="space-y-4">
@@ -534,19 +528,22 @@
                   </select>
                 </div>
 
+                <!-- Tipo de Entrega (automático - apenas visualização) -->
                 <div>
                   <label class="block text-sm font-medium text-foreground mb-1">
                     Tipo de Entrega *
                   </label>
-                  <select
-                    v-model="form.tipo_retirada"
-                    required
-                    class="w-full px-3 py-2 bg-secondary border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="entrega">Entrega</option>
-                    <option value="retirada">Retirada</option>
-                  </select>
+                  <div class="w-full px-3 py-2 bg-muted border border-input rounded-md text-foreground flex items-center gap-2">
+                    <span v-if="form.tipo_retirada === 'retirada'" class="text-green-600 dark:text-green-400 font-medium">
+                      🏪 Retirada no Balcão
+                    </span>
+                    <span v-else-if="form.tipo_retirada === 'entrega'" class="text-blue-600 dark:text-blue-400 font-medium">
+                      🚚 Entrega
+                    </span>
+                    <span v-else class="text-muted-foreground">
+                      (Será definido automaticamente)
+                    </span>
+                  </div>
                 </div>
               </div>
 
