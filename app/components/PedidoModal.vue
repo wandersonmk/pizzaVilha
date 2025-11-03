@@ -355,7 +355,7 @@ const printPedido = () => {
           width: 72mm;
           color: #000;
           background: #fff;
-          font-weight: 400;
+          font-weight: 600;
         }
         
         .header {
@@ -390,8 +390,8 @@ const printPedido = () => {
           display: flex;
           justify-content: space-between;
           margin-bottom: 2px;
-          font-weight: 400;
-          font-size: 14px;
+          font-weight: 600;
+          font-size: 15px;
         }
         
         .item-wrapper {
@@ -409,15 +409,15 @@ const printPedido = () => {
         
         .item-name {
           flex: 1;
-          font-weight: 400;
-          font-size: 14px;
+          font-weight: 600;
+          font-size: 15px;
         }
         
         .item-price {
           text-align: right;
           min-width: 60px;
-          font-weight: 400;
-          font-size: 14px;
+          font-weight: 600;
+          font-size: 15px;
         }
         
         .total-line {
@@ -440,7 +440,7 @@ const printPedido = () => {
           padding: 4px;
           margin: 4px 0;
           border-left: 2px solid #666;
-          font-weight: 400;
+          font-weight: 600;
           font-size: 14px;
         }
         
@@ -457,8 +457,8 @@ const printPedido = () => {
       <div class="header">
         <div style="font-size: 12px; margin-bottom: 4px;">CUPOM NAO FISCAL</div>
         <div class="restaurant-name">Pizza'Vilha</div>
-        <div style="font-size: 12px;">Plataforma: Pizza'Vilha</div>
-        <div style="font-size: 11px; margin-top: 2px;">CNPJ: 54.534.693/0001-21</div>
+        <div style="font-size: 14px; font-weight: 600;">Plataforma: Pizza'Vilha</div>
+        <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">CNPJ: 54.534.693/0001-21</div>
       </div>
       
       <div class="section">
@@ -483,7 +483,7 @@ const printPedido = () => {
             <strong>Endereço:</strong><br/>
             ${props.pedido.endereco}
           </div>
-        ` : '<div style="margin-top: 4px; padding: 4px; background: #f0f0f0; text-align: center;"><strong>⚠️ RETIRADA NO BALCÃO</strong></div>'}
+        ` : '<div style="margin-top: 4px; padding: 4px; background: #f0f0f0; text-align: center;"><strong>RETIRADA NO BALCÃO</strong></div>'}
       </div>
       
       <div class="separator"></div>
