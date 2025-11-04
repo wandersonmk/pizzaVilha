@@ -92,6 +92,7 @@
             <option value="">Todas</option>
             <option value="dinheiro">Dinheiro</option>
             <option value="cartao">Cartão</option>
+            <option value="pix">PIX</option>
           </select>
         </div>
 
@@ -165,7 +166,7 @@
             v-if="filtrosLocal.formaPagamento"
             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
           >
-            {{ filtrosLocal.formaPagamento === 'dinheiro' ? 'Dinheiro' : 'Cartão' }}
+            {{ filtrosLocal.formaPagamento === 'dinheiro' ? 'Dinheiro' : filtrosLocal.formaPagamento === 'cartao' ? 'Cartão' : 'PIX' }}
             <button @click="removerFiltro('formaPagamento')" class="ml-1 hover:text-yellow-600">
               <i class="fas fa-times"></i>
             </button>
