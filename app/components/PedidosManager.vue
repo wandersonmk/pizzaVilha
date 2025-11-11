@@ -415,16 +415,16 @@ const fecharModalCancelamento = () => {
   pedidoParaCancelar.value = null
 }
 
-const confirmarCancelamento = async (motivo: string) => {
+const confirmarCancelamento = async () => {
   if (!pedidoParaCancelar.value) return
 
   const pedido = pedidoParaCancelar.value
-  const success = await cancelarPedido(pedido.id, motivo)
+  const success = await cancelarPedido(pedido.id)
 
   if (success) {
     const toast = await useToastSafe()
     if (toast) {
-      toast.success(`Pedido #${pedido.numero} foi cancelado`)
+      toast.success(`Pedido #${pedido.numero} foi cancelado e excluído`)
     }
     fecharModalCancelamento()
   } else {

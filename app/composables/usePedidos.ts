@@ -485,9 +485,9 @@ export const usePedidos = () => {
   }
 
   // Cancelar pedido (deleta do banco de dados)
-  const cancelarPedido = async (pedidoId: string, motivo: string): Promise<boolean> => {
+  const cancelarPedido = async (pedidoId: string): Promise<boolean> => {
     try {
-      console.log(`[usePedidos] Cancelando pedido ${pedidoId} com motivo: ${motivo}`)
+      console.log(`[usePedidos] Deletando pedido ${pedidoId}`)
 
       const { error: supabaseError } = await supabase
         .from('pedidos')
