@@ -16,11 +16,12 @@ interface PedidoSupabase {
   observacao?: string
   valor_total: string
   valor_entrega: string
-  forma_pagamento: 'dinheiro' | 'cartao'
+  forma_pagamento: 'dinheiro' | 'cartao' | 'pix'
   tipo_retirada: 'retirada' | 'entrega'
   troco?: string
   tempo_estimado?: number
-  status: 'novo' | 'cozinha' | 'entrega' | 'concluido'
+  status: 'novo' | 'cozinha' | 'entrega' | 'concluido' | 'cancelado'
+  motivo_cancelamento?: string
   created_at: string
   updated_at: string
 }
@@ -35,8 +36,9 @@ interface Pedido {
   total: number
   formaPagamento: 'dinheiro' | 'cartao' | 'pix'
   tipoEntrega: 'retirada' | 'entrega'
-  status: 'novo' | 'cozinha' | 'entrega' | 'concluido'
+  status: 'novo' | 'cozinha' | 'entrega' | 'concluido' | 'cancelado'
   observacao?: string
+  motivoCancelamento?: string
   troco?: number
   dataHora: Date
   updatedAt: Date
@@ -162,6 +164,7 @@ export const usePedidos = () => {
       tipoEntrega: pedidoSupabase.tipo_retirada,
       status: pedidoSupabase.status,
       observacao: pedidoSupabase.observacao || undefined,
+      motivoCancelamento: pedidoSupabase.motivo_cancelamento || undefined,
       troco: pedidoSupabase.troco ? parseFloat(pedidoSupabase.troco) : undefined,
       dataHora: new Date(pedidoSupabase.created_at),
       updatedAt: new Date(pedidoSupabase.updated_at),
@@ -481,6 +484,36 @@ export const usePedidos = () => {
     }
   }
 
+  // Cancelar pedido (deleta do banco de dados)
+  const cancelarPedido = async (pedidoId: string, motivo: string): Promise<boolean> => {
+    try {
+      console.log(`[usePedidos] Cancelando pedido ${pedidoId} com motivo: ${motivo}`)
+
+      const { error: supabaseError } = await supabase
+        .from('pedidos')
+        .delete()
+        .eq('id', pedidoId)
+
+      if (supabaseError) {
+        console.error('[usePedidos] Erro ao deletar pedido:', supabaseError)
+        return false
+      }
+
+      // Remover localmente
+      const index = pedidos.value.findIndex(p => p.id === pedidoId)
+      if (index !== -1) {
+        pedidos.value.splice(index, 1)
+      }
+
+      console.log('[usePedidos] Pedido deletado com sucesso')
+      return true
+
+    } catch (err) {
+      console.error('[usePedidos] Erro ao cancelar pedido:', err)
+      return false
+    }
+  }
+
   return {
     pedidos: readonly(pedidos),
     isLoading: readonly(isLoading),
@@ -489,6 +522,7 @@ export const usePedidos = () => {
     fetchAllPedidos, // Busca todos os pedidos (para relatórios)
     updatePedidoStatus,
     createPedido,
+    cancelarPedido, // Cancelar pedido com motivo
     getPedidosByStatus,
     getOrderCountByStatus,
     setupRealtimeSubscription,

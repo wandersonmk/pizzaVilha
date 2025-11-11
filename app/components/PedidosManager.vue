@@ -106,6 +106,7 @@
             @view="viewOrder"
             @accept="acceptOrder"
             @print="printOrder"
+            @cancel="openCancelModal"
           />
         </div>
       </div>
@@ -129,6 +130,7 @@
             @view="viewOrder"
             @ready="markAsReady"
             @print="printOrder"
+            @cancel="openCancelModal"
           />
         </div>
       </div>
@@ -150,8 +152,9 @@
             :key="pedido.id"
             :pedido="pedido"
             @view="viewOrder"
-            @complete="completeOrder"
+            @complete="markAsComplete"
             @print="printOrder"
+            @cancel="openCancelModal"
           />
         </div>
       </div>
@@ -174,6 +177,7 @@
             :pedido="pedido"
             @view="viewOrder"
             @print="printOrder"
+            @cancel="openCancelModal"
           />
         </div>
       </div>
@@ -187,6 +191,15 @@
       @accept="acceptOrder"
       @ready="markAsReady"
       @complete="completeOrder"
+    />
+
+    <!-- Modal de Cancelamento -->
+    <ModalCancelamento
+      :isOpen="isModalCancelamentoOpen"
+      :pedidoId="pedidoParaCancelar?.id || ''"
+      :pedidoNumero="pedidoParaCancelar?.numero || 0"
+      @close="fecharModalCancelamento"
+      @confirm="confirmarCancelamento"
     />
 
     <!-- Modal de Novo Pedido -->
@@ -209,6 +222,7 @@ const {
   error: pedidosError,
   fetchPedidos,
   updatePedidoStatus,
+  cancelarPedido,
   getPedidosByStatus,
   getOrderCountByStatus,
   setupRealtimeSubscription,
@@ -242,8 +256,9 @@ interface Pedido {
   total: number
   formaPagamento: 'dinheiro' | 'cartao' | 'pix'
   tipoEntrega: 'retirada' | 'entrega'
-  status: 'novo' | 'cozinha' | 'entrega' | 'concluido'
+  status: 'novo' | 'cozinha' | 'entrega' | 'concluido' | 'cancelado'
   observacao?: string
+  motivoCancelamento?: string
   troco?: number
   dataHora: Date
   tempoEstimado?: number
@@ -255,6 +270,8 @@ const activeFilter = ref<string>('todos')
 const isModalOpen = ref(false)
 const selectedPedido = ref<Pedido | null>(null)
 const isModalNovoPedidoOpen = ref(false)
+const isModalCancelamentoOpen = ref(false)
+const pedidoParaCancelar = ref<Pedido | null>(null)
 const searchQuery = ref('')
 
 // Filtros de status
@@ -383,6 +400,37 @@ const updateOrderStatus = async (pedidoId: string, newStatus: string) => {
     const toast = await useToastSafe()
     if (toast) {
       toast.error(`Erro ao atualizar pedido #${pedido.numero}`)
+    }
+  }
+}
+
+// Funções de Cancelamento
+const openCancelModal = (pedido: Pedido) => {
+  pedidoParaCancelar.value = pedido
+  isModalCancelamentoOpen.value = true
+}
+
+const fecharModalCancelamento = () => {
+  isModalCancelamentoOpen.value = false
+  pedidoParaCancelar.value = null
+}
+
+const confirmarCancelamento = async (motivo: string) => {
+  if (!pedidoParaCancelar.value) return
+
+  const pedido = pedidoParaCancelar.value
+  const success = await cancelarPedido(pedido.id, motivo)
+
+  if (success) {
+    const toast = await useToastSafe()
+    if (toast) {
+      toast.success(`Pedido #${pedido.numero} foi cancelado`)
+    }
+    fecharModalCancelamento()
+  } else {
+    const toast = await useToastSafe()
+    if (toast) {
+      toast.error(`Erro ao cancelar pedido #${pedido.numero}`)
     }
   }
 }

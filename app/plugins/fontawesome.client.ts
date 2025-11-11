@@ -60,7 +60,8 @@ import {
   faClock,
   faCopy,
   faGear,
-  faFloppyDisk
+  faFloppyDisk,
+  faBan
 } from '@fortawesome/free-solid-svg-icons'
 
 // Importar ícones de marca (brands)
@@ -134,7 +135,8 @@ library.add(
   faClock,
   faCopy,
   faGear,
-  faFloppyDisk
+  faFloppyDisk,
+  faBan
 )
 
 export default defineNuxtPlugin((nuxtApp) => {

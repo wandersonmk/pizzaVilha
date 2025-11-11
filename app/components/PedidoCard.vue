@@ -21,6 +21,14 @@
       </div>
       <div class="flex items-center gap-1">
         <button
+          v-if="pedido.status !== 'concluido' && pedido.status !== 'cancelado'"
+          @click.stop="$emit('cancel', pedido)"
+          class="p-1 rounded text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+          title="Cancelar pedido"
+        >
+          <font-awesome-icon icon="ban" class="w-3 h-3" />
+        </button>
+        <button
           @click.stop="$emit('print', pedido)"
           class="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
           title="Imprimir pedido"
@@ -100,6 +108,13 @@
           Concluído
         </div>
       </template>
+
+      <template v-else-if="pedido.status === 'cancelado'">
+        <div class="flex-1 bg-red-100 text-red-700 px-2 py-1.5 rounded text-xs font-medium text-center">
+          <font-awesome-icon icon="ban" class="w-3 h-3 mr-1" />
+          Cancelado
+        </div>
+      </template>
     </div>
 
     <!-- Observação importante se houver -->
@@ -128,8 +143,9 @@ interface Pedido {
   total: number
   formaPagamento: 'dinheiro' | 'cartao' | 'pix'
   tipoEntrega: 'retirada' | 'entrega'
-  status: 'novo' | 'cozinha' | 'entrega' | 'concluido'
+  status: 'novo' | 'cozinha' | 'entrega' | 'concluido' | 'cancelado'
   observacao?: string
+  motivoCancelamento?: string
   troco?: number
   dataHora: Date
   tempoEstimado?: number
@@ -143,6 +159,7 @@ defineEmits<{
   ready: [pedidoId: string]
   complete: [pedidoId: string]
   print: [pedido: Pedido]
+  cancel: [pedido: Pedido]
 }>()
 
 const getStatusLabel = (status: string) => {
@@ -150,7 +167,8 @@ const getStatusLabel = (status: string) => {
     novo: 'Novo',
     cozinha: 'Cozinha',
     entrega: 'Entrega',
-    concluido: 'Concluído'
+    concluido: 'Concluído',
+    cancelado: 'Cancelado'
   }
   return labels[status as keyof typeof labels] || status
 }
@@ -160,7 +178,8 @@ const getStatusColor = (status: string) => {
     novo: 'bg-blue-100 text-blue-700',
     cozinha: 'bg-orange-100 text-orange-700',
     entrega: 'bg-purple-100 text-purple-700',
-    concluido: 'bg-green-100 text-green-700'
+    concluido: 'bg-green-100 text-green-700',
+    cancelado: 'bg-red-100 text-red-700'
   }
   return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-700'
 }
