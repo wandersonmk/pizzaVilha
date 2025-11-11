@@ -27,7 +27,7 @@
         <div class="relative z-10 flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-400 mb-1">Valor Total</p>
-            <p class="text-3xl font-bold text-foreground">R$ {{ totalValor.toFixed(2).replace('.', ',') }}</p>
+            <p class="text-3xl font-bold text-foreground">R$ {{ formatarMoeda(totalValor) }}</p>
             <p class="text-xs text-blue-600 mt-1">faturado</p>
           </div>
           <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
@@ -45,7 +45,7 @@
         <div class="relative z-10 flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-400 mb-1">Ticket Médio</p>
-            <p class="text-3xl font-bold text-foreground">R$ {{ ticketMedio.toFixed(2).replace('.', ',') }}</p>
+            <p class="text-3xl font-bold text-foreground">R$ {{ formatarMoeda(ticketMedio) }}</p>
             <p class="text-xs text-purple-600 mt-1">por pedido</p>
           </div>
           <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
@@ -118,7 +118,7 @@
             </div>
             <div class="text-right">
               <div class="text-sm font-medium text-foreground">{{ cliente.pedidos }} pedidos</div>
-              <div class="text-xs text-muted-foreground">R$ {{ cliente.valor.toFixed(2).replace('.', ',') }}</div>
+              <div class="text-xs text-muted-foreground">R$ {{ formatarMoeda(cliente.valor) }}</div>
             </div>
           </div>
         </div>
@@ -135,7 +135,7 @@
         <div class="p-6">
           <div v-for="pagamento in analisePagamentos" :key="pagamento.tipo" class="flex items-center justify-between py-2">
             <div class="flex items-center">
-              <div class="w-4 h-4 rounded mr-3" :class="pagamento.tipo === 'dinheiro' ? 'bg-green-500' : 'bg-blue-500'"></div>
+              <div class="w-4 h-4 rounded mr-3" :class="pagamento.tipo === 'dinheiro' ? 'bg-green-500' : pagamento.tipo === 'pix' ? 'bg-purple-500' : 'bg-blue-500'"></div>
               <span class="text-sm font-medium text-foreground">{{ pagamento.label }}</span>
             </div>
             <div class="text-right">
@@ -192,6 +192,14 @@ const ticketMedio = computed(() => estatisticas.value?.ticketMedio || 0)
 const topClientes = computed(() => estatisticas.value?.topClientes || [])
 const analisePagamentos = computed(() => estatisticas.value?.analisePagamentos || [])
 const pedidos = computed(() => pedidosDetalhados.value || [])
+
+// Função para formatar valores em moeda brasileira
+const formatarMoeda = (valor: number): string => {
+  return valor.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
 
 // Methods
 const carregarDados = async () => {

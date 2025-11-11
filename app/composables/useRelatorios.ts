@@ -119,6 +119,7 @@ export function useRelatorios() {
       // Análise de pagamentos
       const pagamentosDinheiro = pedidos.filter((p: any) => p.forma_pagamento === 'dinheiro').length
       const pagamentosCartao = pedidos.filter((p: any) => p.forma_pagamento === 'cartao').length
+      const pagamentosPix = pedidos.filter((p: any) => p.forma_pagamento === 'pix').length
 
       const analisePagamentos: AnalisePagamento[] = [
         {
@@ -132,6 +133,12 @@ export function useRelatorios() {
           label: 'Cartão',
           pedidos: pagamentosCartao,
           percentual: totalPedidos > 0 ? Math.round((pagamentosCartao / totalPedidos) * 100) : 0
+        },
+        {
+          tipo: 'pix',
+          label: 'PIX',
+          pedidos: pagamentosPix,
+          percentual: totalPedidos > 0 ? Math.round((pagamentosPix / totalPedidos) * 100) : 0
         }
       ]
 
