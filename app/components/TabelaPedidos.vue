@@ -84,10 +84,7 @@
             <!-- Valor Total -->
             <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
               <div class="font-medium">
-                R$ {{ Number(pedido.valor_total).toFixed(2).replace('.', ',') }}
-              </div>
-              <div v-if="pedido.valor_entrega && pedido.valor_entrega > 0" class="text-xs text-muted-foreground">
-                + R$ {{ Number(pedido.valor_entrega).toFixed(2).replace('.', ',') }} entrega
+                R$ {{ (Number(pedido.valor_total || 0) + Number(pedido.valor_entrega || 0)).toFixed(2).replace('.', ',') }}
               </div>
             </td>
 
