@@ -152,7 +152,7 @@
             :key="pedido.id"
             :pedido="pedido"
             @view="viewOrder"
-            @complete="markAsComplete"
+            @complete="completeOrder"
             @print="printOrder"
             @cancel="openCancelModal"
           />
