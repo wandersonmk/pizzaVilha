@@ -90,66 +90,56 @@ export const usePedidos = () => {
 
   // Função para converter pedido do Supabase para o formato da interface
   const convertSupabasePedido = (pedidoSupabase: PedidoSupabase): Pedido => {
-    // Parse do campo "pedido" para extrair itens
-    const items: PedidoItem[] = []
-    const pedidoText = pedidoSupabase.pedido
-    
-    // Parse suporta quebras de linha OU vírgula seguida de "Nx " (para não quebrar em vírgulas de preço)
-    const itemsTexto = pedidoText
-      .split(/\n|,\s+(?=\d+x\s)/)
-      .map(item => item.trim())
-      .filter(item => item.length > 0)
-    
-    itemsTexto.forEach(itemTexto => {
-      // Tenta fazer match com padrão "NxN Item - R$ XX,XX" ou "NxN Item"
-      // Regex captura: quantidade, nome (tudo até " - R$"), e preço
-      const matchComPreco = itemTexto.match(/^(\d+)x\s+(.+?)\s+-\s+R\$\s+([\d,\.]+)$/)
-      
-      if (matchComPreco && matchComPreco[1] && matchComPreco[2] && matchComPreco[3]) {
-        // Formato completo com preço: "2x Pizza Margherita (Grande) - R$ 52,64"
-        const quantidade = parseInt(matchComPreco[1])
-        const nome = matchComPreco[2].trim()
-        const precoStr = matchComPreco[3].replace(',', '.')
-        const precoTotal = parseFloat(precoStr)
+    // Parse dos itens do pedido (string com quebras de linha para array)
+    let items: PedidoItem[] = []
+    try {
+      if (typeof pedidoSupabase.pedido === 'string') {
+        // Quebrar o texto por linhas e processar cada item
+        const linhas = pedidoSupabase.pedido.split('\n').filter(linha => linha.trim())
         
-        items.push({
-          nome,
-          quantidade,
-          preco: precoTotal / quantidade,
-          observacao: undefined
-        })
-      } else {
-        // Tenta match sem preço: "2x Pizza Margherita"
-        const matchSemPreco = itemTexto.match(/^(\d+)x\s+(.+)$/)
-        
-        if (matchSemPreco && matchSemPreco[1] && matchSemPreco[2]) {
-          const quantidade = parseInt(matchSemPreco[1])
-          // Remove qualquer parte que pareça preço do nome (caso tenha sobrado)
-          const nome = matchSemPreco[2].trim().replace(/\s+-\s+R\$\s+[\d,\.]+$/, '')
-          // Subtrai a taxa de entrega antes de calcular o preço estimado
-          const valorSemEntrega = parseFloat(pedidoSupabase.valor_total) - parseFloat(pedidoSupabase.valor_entrega || '0')
-          const precoEstimado = valorSemEntrega / itemsTexto.length
+        items = linhas.map((linha) => {
+          // Regex para capturar formato brasileiro: "Nome: R$ 37,00"
+          // Captura: opcionalmente "-", nome, ":", "R$", valor com vírgula
+          const match = linha.match(/^-?\s*(.+?):\s*R\$\s*(\d+(?:,\d{2})?)/)
           
-          items.push({
-            nome,
-            quantidade,
-            preco: precoEstimado / quantidade,
-            observacao: undefined
-          })
-        } else {
-          // Sem padrão "Nx" - assumir 1 item
-          const nomeLimpo = itemTexto.trim().replace(/\s+-\s+R\$\s+[\d,\.]+$/, '')
-          // Subtrai a taxa de entrega antes de calcular o preço estimado
-          const valorSemEntrega = parseFloat(pedidoSupabase.valor_total) - parseFloat(pedidoSupabase.valor_entrega || '0')
-          items.push({
-            nome: nomeLimpo,
-            quantidade: 1,
-            preco: valorSemEntrega / itemsTexto.length,
-            observacao: undefined
-          })
-        }
+          if (match && match[1] && match[2]) {
+            const nome = match[1].trim()
+            const precoStr = match[2].replace(',', '.')
+            const preco = parseFloat(precoStr)
+            
+            return {
+              nome: nome,
+              quantidade: 1,
+              preco: preco,
+              observacao: undefined
+            }
+          } else {
+            // Fallback se não conseguir fazer parse
+            return {
+              nome: linha.trim(),
+              quantidade: 1,
+              preco: 0,
+              observacao: undefined
+            }
+          }
+        })
       }
-    })
+    } catch (e) {
+      console.error('Erro ao converter itens:', e)
+      items = [{
+        nome: pedidoSupabase.pedido || 'Erro ao carregar itens',
+        quantidade: 1,
+        preco: parseFloat(pedidoSupabase.valor_total || '0'),
+        observacao: undefined
+      }]
+    }
+    
+    console.log('DEBUG items finais:', items)
+
+    // Calcular o total corretamente: valor_total (subtotal) + valor_entrega
+    const subtotal = parseFloat(pedidoSupabase.valor_total || '0')
+    const valorEntrega = pedidoSupabase.valor_entrega ? parseFloat(pedidoSupabase.valor_entrega) : 0
+    const totalComEntrega = subtotal + valorEntrega
 
     return {
       id: pedidoSupabase.id,
@@ -158,12 +148,12 @@ export const usePedidos = () => {
       telefone: formatTelefone(pedidoSupabase.telefone_cliente),
       endereco: pedidoSupabase.endereco_entrega || undefined,
       items,
-      total: parseFloat(pedidoSupabase.valor_total),
-      valorEntrega: pedidoSupabase.valor_entrega ? parseFloat(pedidoSupabase.valor_entrega) : undefined,
+      total: totalComEntrega, // Total = subtotal (valor_total) + entrega
+      valorEntrega: valorEntrega > 0 ? valorEntrega : undefined,
       formaPagamento: pedidoSupabase.forma_pagamento,
       tipoEntrega: pedidoSupabase.tipo_retirada,
       status: pedidoSupabase.status,
-      observacao: pedidoSupabase.observacao || undefined,
+      observacao: (pedidoSupabase.observacao && pedidoSupabase.observacao !== 'null' && pedidoSupabase.observacao.trim() !== '') ? pedidoSupabase.observacao : undefined,
       motivoCancelamento: pedidoSupabase.motivo_cancelamento || undefined,
       troco: pedidoSupabase.troco ? parseFloat(pedidoSupabase.troco) : undefined,
       dataHora: new Date(pedidoSupabase.created_at),

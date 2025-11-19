@@ -51,7 +51,8 @@
           <tr 
             v-for="pedido in pedidosFiltrados" 
             :key="pedido.id"
-            class="hover:bg-muted/50 transition-colors duration-150"
+            @click="abrirDetalhesPedido(pedido)"
+            class="hover:bg-muted/50 transition-colors duration-150 cursor-pointer"
           >
             <!-- Número do Pedido -->
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
@@ -140,11 +141,23 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de Detalhes do Pedido -->
+    <PedidoModal 
+      v-if="pedidoSelecionado"
+      :pedido="pedidoSelecionado"
+      :is-open="isModalOpen"
+      @close="fecharModal"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+
+// Estado do modal
+const isModalOpen = ref(false)
+const pedidoSelecionado = ref<Pedido | null>(null)
 
 // Props
 interface Pedido {
@@ -328,6 +341,107 @@ const getStatusBadgeClass = (status: string) => {
     concluido: 'bg-green-100 text-green-800'
   }
   return classes[status] || 'bg-gray-100 text-gray-800'
+}
+
+// Funções do modal
+const abrirDetalhesPedido = (pedido: Pedido) => {
+  // Converter pedido do banco para o formato do PedidoModal
+  const pedidoConvertido = converterPedidoParaModal(pedido)
+  pedidoSelecionado.value = pedidoConvertido as any
+  isModalOpen.value = true
+}
+
+const fecharModal = () => {
+  isModalOpen.value = false
+  setTimeout(() => {
+    pedidoSelecionado.value = null
+  }, 300)
+}
+
+// Converter pedido do banco para formato do modal
+const converterPedidoParaModal = (pedido: Pedido) => {
+  console.log('Debug - Pedido original:', pedido)
+  console.log('Debug - Campo pedido:', pedido.pedido)
+  
+  // Parse dos itens do pedido (string com quebras de linha para array)
+  let items = []
+  try {
+    if (typeof pedido.pedido === 'string') {
+      // Quebrar o texto por linhas e processar cada item
+      const linhas = pedido.pedido.split('\n').filter(linha => linha.trim())
+      console.log('Debug - Linhas encontradas:', linhas)
+      
+      items = linhas.map((linha, index) => {
+        console.log(`Debug - Processando linha ${index}:`, linha)
+        
+        // Regex para capturar formato brasileiro: "Nome: R$ 37,00"
+        // Captura: opcionalmente "-", nome, ":", "R$", valor com vírgula
+        const match = linha.match(/^-?\s*(.+?):\s*R\$\s*(\d+(?:,\d{2})?)/)
+        
+        if (match) {
+          const nome = match[1].trim()
+          const precoStr = match[2].replace(',', '.')
+          const preco = parseFloat(precoStr)
+          
+          console.log(`Debug - Match encontrado: nome="${nome}", preço="${preco}"`)
+          
+          return {
+            nome: nome,
+            quantidade: 1,
+            preco: preco,
+            observacao: undefined
+          }
+        } else {
+          console.log(`Debug - Sem match para linha: "${linha}"`)
+          // Fallback se não conseguir fazer parse
+          return {
+            nome: linha.trim(),
+            quantidade: 1,
+            preco: 0,
+            observacao: undefined
+          }
+        }
+      })
+    }
+  } catch (e) {
+    console.error('Erro ao converter itens:', e)
+    items = [{
+      nome: pedido.pedido || 'Erro ao carregar itens',
+      quantidade: 1,
+      preco: parseFloat(pedido.valor_total as any || '0')
+    }]
+  }
+
+  // Se não conseguiu extrair itens, criar um item genérico
+  if (items.length === 0) {
+    items = [{
+      nome: pedido.pedido || 'Pedido sem detalhes',
+      quantidade: 1,
+      preco: parseFloat(pedido.valor_total as any || '0')
+    }]
+  }
+
+  console.log('Debug - Items processados:', items)
+
+  const resultado = {
+    id: pedido.id,
+    numero: pedido.numero_pedido,
+    cliente: pedido.nome_cliente,
+    telefone: pedido.telefone_cliente || '',
+    endereco: pedido.endereco_entrega || '',
+    items: items,
+    total: parseFloat(pedido.valor_total as any || '0') + parseFloat(pedido.valor_entrega as any || '0'),
+    formaPagamento: pedido.forma_pagamento,
+    tipoEntrega: pedido.tipo_retirada,
+    status: 'concluido', // Pedidos em relatórios são considerados concluídos
+    observacao: pedido.observacao,
+    troco: pedido.troco,
+    dataHora: new Date(pedido.created_at),
+    valorEntrega: parseFloat(pedido.valor_entrega as any || '0')
+  }
+  
+  console.log('Debug - Resultado final:', resultado)
+  return resultado
 }
 </script>
 

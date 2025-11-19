@@ -138,7 +138,7 @@
           </div>
 
           <!-- Observações -->
-          <div v-if="pedido?.observacao" class="bg-muted/30 rounded-lg p-4">
+          <div v-if="pedido?.observacao && pedido.observacao !== 'null' && pedido.observacao.trim() !== ''" class="bg-muted/30 rounded-lg p-4">
             <h4 class="font-medium text-foreground mb-2">Observações</h4>
             <p class="text-foreground">{{ pedido.observacao }}</p>
           </div>
@@ -177,15 +177,6 @@
               Concluir Entrega
             </button>
           </template>
-
-          <!-- Botão de imprimir sempre disponível -->
-          <button
-            @click="printPedido"
-            class="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg font-medium transition-colors"
-          >
-            <font-awesome-icon icon="print" class="w-4 h-4 mr-2" />
-            Imprimir
-          </button>
         </div>
       </div>
     </div>
