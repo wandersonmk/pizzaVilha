@@ -135,7 +135,7 @@
         <div class="p-6">
           <div v-for="pagamento in analisePagamentos" :key="pagamento.tipo" class="flex items-center justify-between py-2">
             <div class="flex items-center">
-              <div class="w-4 h-4 rounded mr-3" :class="pagamento.tipo === 'dinheiro' ? 'bg-green-500' : pagamento.tipo === 'pix' ? 'bg-purple-500' : 'bg-blue-500'"></div>
+              <div class="w-4 h-4 rounded mr-3" :class="getPaymentColor(pagamento.tipo)"></div>
               <span class="text-sm font-medium text-foreground">{{ pagamento.label }}</span>
             </div>
             <div class="text-right">
@@ -199,6 +199,18 @@ const formatarMoeda = (valor: number): string => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })
+}
+
+// Função para obter cor do método de pagamento
+const getPaymentColor = (tipo: string): string => {
+  const colors: Record<string, string> = {
+    dinheiro: 'bg-green-500',
+    cartao: 'bg-blue-500',
+    credito: 'bg-indigo-500',
+    debito: 'bg-cyan-500',
+    pix: 'bg-purple-500'
+  }
+  return colors[tipo] || 'bg-gray-500'
 }
 
 // Methods

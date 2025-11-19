@@ -16,7 +16,7 @@ interface PedidoSupabase {
   observacao?: string
   valor_total: string
   valor_entrega: string
-  forma_pagamento: 'dinheiro' | 'cartao' | 'pix'
+  forma_pagamento: 'dinheiro' | 'cartao' | 'pix' | 'credito' | 'debito'
   tipo_retirada: 'retirada' | 'entrega'
   troco?: string
   tempo_estimado?: number
@@ -34,7 +34,7 @@ interface Pedido {
   endereco?: string
   items: PedidoItem[]
   total: number
-  formaPagamento: 'dinheiro' | 'cartao' | 'pix'
+  formaPagamento: 'dinheiro' | 'cartao' | 'pix' | 'credito' | 'debito'
   tipoEntrega: 'retirada' | 'entrega'
   status: 'novo' | 'cozinha' | 'entrega' | 'concluido' | 'cancelado'
   observacao?: string

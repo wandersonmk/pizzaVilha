@@ -119,6 +119,8 @@ export function useRelatorios() {
       // Análise de pagamentos
       const pagamentosDinheiro = pedidos.filter((p: any) => p.forma_pagamento === 'dinheiro').length
       const pagamentosCartao = pedidos.filter((p: any) => p.forma_pagamento === 'cartao').length
+      const pagamentosCredito = pedidos.filter((p: any) => p.forma_pagamento === 'credito').length
+      const pagamentosDebito = pedidos.filter((p: any) => p.forma_pagamento === 'debito').length
       const pagamentosPix = pedidos.filter((p: any) => p.forma_pagamento === 'pix').length
 
       const analisePagamentos: AnalisePagamento[] = [
@@ -133,6 +135,18 @@ export function useRelatorios() {
           label: 'Cartão',
           pedidos: pagamentosCartao,
           percentual: totalPedidos > 0 ? Math.round((pagamentosCartao / totalPedidos) * 100) : 0
+        },
+        {
+          tipo: 'credito',
+          label: 'Crédito',
+          pedidos: pagamentosCredito,
+          percentual: totalPedidos > 0 ? Math.round((pagamentosCredito / totalPedidos) * 100) : 0
+        },
+        {
+          tipo: 'debito',
+          label: 'Débito',
+          pedidos: pagamentosDebito,
+          percentual: totalPedidos > 0 ? Math.round((pagamentosDebito / totalPedidos) * 100) : 0
         },
         {
           tipo: 'pix',

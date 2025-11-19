@@ -282,7 +282,10 @@ const formatDate = (dateString: string) => {
 const getPaymentLabel = (payment: string) => {
   const labels: Record<string, string> = {
     dinheiro: 'Dinheiro',
-    cartao: 'Cartão'
+    cartao: 'Cartão',
+    credito: 'Crédito',
+    debito: 'Débito',
+    pix: 'PIX'
   }
   return labels[payment] || payment
 }
@@ -290,7 +293,10 @@ const getPaymentLabel = (payment: string) => {
 const getPaymentBadgeClass = (payment: string) => {
   const classes: Record<string, string> = {
     dinheiro: 'bg-green-100 text-green-800',
-    cartao: 'bg-blue-100 text-blue-800'
+    cartao: 'bg-blue-100 text-blue-800',
+    credito: 'bg-indigo-100 text-indigo-800',
+    debito: 'bg-cyan-100 text-cyan-800',
+    pix: 'bg-purple-100 text-purple-800'
   }
   return classes[payment] || 'bg-gray-100 text-gray-800'
 }
