@@ -474,6 +474,7 @@
                 <div>
                   <label class="block text-sm font-medium text-foreground mb-1">
                     Valor da Entrega
+                    <span v-if="form.tipo_retirada === 'retirada'" class="text-xs text-muted-foreground ml-1">(Retirada no balcão)</span>
                   </label>
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
@@ -482,7 +483,13 @@
                       type="text"
                       placeholder="0,00"
                       @input="formatarValorEntrega"
-                      class="w-full pl-10 pr-3 py-2 bg-secondary border border-input rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      :disabled="form.tipo_retirada === 'retirada'"
+                      :class="[
+                        'w-full pl-10 pr-3 py-2 border border-input rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary',
+                        form.tipo_retirada === 'retirada' 
+                          ? 'bg-muted cursor-not-allowed opacity-60' 
+                          : 'bg-secondary'
+                      ]"
                     />
                   </div>
                 </div>
@@ -1227,6 +1234,14 @@ const criarPedido = async () => {
     loading.value = false
   }
 }
+
+// Zerar valor da entrega quando tipo for retirada
+watch(() => form.value.tipo_retirada, (novoTipo) => {
+  if (novoTipo === 'retirada') {
+    valorEntregaExibicao.value = '0,00'
+    valorEntregaNumero.value = 0
+  }
+})
 
 // Carregar dados quando modal abrir
 watch(() => props.isOpen, (newValue) => {
