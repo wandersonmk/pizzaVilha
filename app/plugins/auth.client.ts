@@ -5,6 +5,10 @@ export default defineNuxtPlugin(async () => {
   if (process.client) {
     console.log('[Auth Plugin] Inicializando...')
     
+    // Limpar cache potencialmente problemático
+    const { checkCacheExpiry, validateSession } = useSessionManager()
+    checkCacheExpiry()
+    
     // Obter estados existentes ou criar novos
     const user = useState<User | null>('auth_user', () => null)
     const session = useState<Session | null>('auth_session', () => null)
@@ -30,11 +34,34 @@ export default defineNuxtPlugin(async () => {
       
       console.log('[Auth Plugin] Cliente Supabase obtido')
       
-      // Verificar se existe uma sessão salva
-      const { data, error } = await supabase.auth.getSession()
+      // Validar sessão por tempo
+      const isSessionValid = await validateSession()
+      if (!isSessionValid) {
+        console.log('[Auth Plugin] Sessão expirada por tempo, limpando...')
+        user.value = null
+        session.value = null
+        loading.value = false
+        return
+      }
+      
+      // Verificar se existe uma sessão salva com timeout
+      const sessionPromise = supabase.auth.getSession()
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Session check timeout')), 5000)
+      )
+      
+      const { data, error } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]).catch((err) => {
+        console.error('[Auth Plugin] Timeout ao obter sessão:', err)
+        return { data: { session: null }, error: err }
+      }) as any
       
       if (error) {
         console.error('[Auth Plugin] Erro ao obter sessão:', error)
+        user.value = null
+        session.value = null
       } else {
         console.log('[Auth Plugin] Sessão obtida:', { hasSession: !!data.session })
         
@@ -43,6 +70,11 @@ export default defineNuxtPlugin(async () => {
           user.value = data.session.user
           session.value = data.session
           console.log('[Auth Plugin] Usuário restaurado:', data.session.user.email)
+          
+          // Registrar início da sessão se não existir
+          if (!localStorage.getItem('session_start_time')) {
+            localStorage.setItem('session_start_time', Date.now().toString())
+          }
         } else {
           user.value = null
           session.value = null

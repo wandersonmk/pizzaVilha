@@ -1,3 +1,15 @@
+<script setup lang="ts">
+import { onMounted } from 'vue'
+
+// Inicializar gerenciamento de sessão
+if (process.client) {
+  onMounted(() => {
+    const { initSessionManager } = useSessionManager()
+    initSessionManager()
+  })
+}
+</script>
+
 <template>
   <div id="app" class="min-h-screen bg-background text-foreground">
     <!-- Accessibility -->

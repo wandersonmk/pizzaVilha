@@ -1185,9 +1185,10 @@ const criarPedido = async () => {
     const proximoNumero = ultimoPedido ? ultimoPedido.numero_pedido + 1 : 1
 
     // Montar descrição do pedido com preços individuais
+    // Formato: "2x Pizza Grande - R$ 60.00" (quebra de linha entre itens)
     const descricaoPedido = itensPedido.value
       .map(item => `${item.quantidade}x ${item.nome} - R$ ${(item.quantidade * item.preco).toFixed(2)}`)
-      .join(', ')
+      .join(', ') // Mantém vírgula para compatibilidade com parser
 
     // Inserir novo pedido
     const { error } = await supabase

@@ -92,35 +92,83 @@ export const usePedidos = () => {
   const convertSupabasePedido = (pedidoSupabase: PedidoSupabase): Pedido => {
     // Parse dos itens do pedido (string com quebras de linha para array)
     let items: PedidoItem[] = []
+    
+    // Calcular o total corretamente: valor_total (subtotal) + valor_entrega
+    const subtotal = parseFloat(pedidoSupabase.valor_total || '0')
+    const valorEntrega = pedidoSupabase.valor_entrega ? parseFloat(pedidoSupabase.valor_entrega) : 0
+    
     try {
       if (typeof pedidoSupabase.pedido === 'string') {
-        // Quebrar o texto por linhas e processar cada item
-        const linhas = pedidoSupabase.pedido.split('\n').filter(linha => linha.trim())
+        // Suportar múltiplos formatos:
+        // 1. Separado por vírgula com preço: "2x Pizza - R$ 181.00, 1x Coca - R$ 5.00"
+        // 2. Separado por quebra de linha: "2 pizzas grandes...\n1 Coca-Cola..."
+        
+        // Detectar formato: se tem "x" seguido de " - R$", é formato estruturado
+        const isFormatoEstruturado = pedidoSupabase.pedido.match(/\d+x\s+.+?\s+-\s+R\$\s+\d+/)
+        
+        let linhas: string[] = []
+        if (isFormatoEstruturado) {
+          // Formato estruturado: separar por vírgula
+          linhas = pedidoSupabase.pedido.split(',').filter(l => l.trim())
+        } else {
+          // Formato texto livre: separar por quebra de linha
+          linhas = pedidoSupabase.pedido.split('\n').filter(l => l.trim())
+        }
         
         items = linhas.map((linha) => {
-          // Regex para capturar formato brasileiro: "Nome: R$ 37,00"
-          // Captura: opcionalmente "-", nome, ":", "R$", valor com vírgula
-          const match = linha.match(/^-?\s*(.+?):\s*R\$\s*(\d+(?:,\d{2})?)/)
+          linha = linha.trim()
           
-          if (match && match[1] && match[2]) {
-            const nome = match[1].trim()
-            const precoStr = match[2].replace(',', '.')
-            const preco = parseFloat(precoStr)
+          // Formato estruturado: "2x Pizza Grande - R$ 60.00"
+          const formatoComX = linha.match(/^(\d+)x\s+(.+?)\s*-\s*R\$\s*(\d+(?:[.,]\d{2})?)/)
+          if (formatoComX) {
+            const quantidade = parseInt(formatoComX[1], 10)
+            const nome = formatoComX[2].trim()
+            const precoTotal = parseFloat(formatoComX[3].replace(',', '.'))
+            const precoUnitario = precoTotal / quantidade
             
             return {
               nome: nome,
-              quantidade: 1,
-              preco: preco,
+              quantidade: quantidade,
+              preco: precoUnitario,
               observacao: undefined
             }
+          }
+          
+          // Formato texto livre: "2 pizzas grandes (calabresa, atum e camarão) com borda de mussarela"
+          const quantMatch = linha.match(/^(\d+)\s+(.+)/)
+          let quantidade = 1
+          let nomeItem = linha.trim()
+          
+          if (quantMatch) {
+            quantidade = parseInt(quantMatch[1], 10)
+            nomeItem = quantMatch[2].trim()
+          }
+          
+          // Tentar capturar preço se houver (raramente presente em texto livre)
+          const precoMatch = linha.match(/(?::|-)?\s*R\$\s*(\d+(?:[.,]\d{2})?)/)
+          let preco = 0
+          
+          if (precoMatch && precoMatch[1]) {
+            const precoStr = precoMatch[1].replace(',', '.')
+            const precoTotal = parseFloat(precoStr)
+            preco = precoTotal / quantidade
+            
+            // Remover a parte do preço do nome
+            nomeItem = nomeItem.replace(/(?::|-)?\s*R\$\s*\d+(?:[.,]\d{2})?/, '').trim()
           } else {
-            // Fallback se não conseguir fazer parse
-            return {
-              nome: linha.trim(),
-              quantidade: 1,
-              preco: 0,
-              observacao: undefined
-            }
+            // Sem preço individual: dividir subtotal proporcionalmente
+            // (isso é apenas para exibição, não é o valor real de cada item)
+            preco = subtotal / linhas.reduce((sum, l) => {
+              const qMatch = l.match(/^(\d+)\s+/)
+              return sum + (qMatch ? parseInt(qMatch[1], 10) : 1)
+            }, 0)
+          }
+          
+          return {
+            nome: nomeItem,
+            quantidade: quantidade,
+            preco: preco,
+            observacao: undefined
           }
         })
       }
@@ -129,16 +177,13 @@ export const usePedidos = () => {
       items = [{
         nome: pedidoSupabase.pedido || 'Erro ao carregar itens',
         quantidade: 1,
-        preco: parseFloat(pedidoSupabase.valor_total || '0'),
+        preco: subtotal,
         observacao: undefined
       }]
     }
     
     console.log('DEBUG items finais:', items)
 
-    // Calcular o total corretamente: valor_total (subtotal) + valor_entrega
-    const subtotal = parseFloat(pedidoSupabase.valor_total || '0')
-    const valorEntrega = pedidoSupabase.valor_entrega ? parseFloat(pedidoSupabase.valor_entrega) : 0
     const totalComEntrega = subtotal + valorEntrega
 
     return {

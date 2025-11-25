@@ -161,9 +161,15 @@ export function useAuth() {
       user.value = null
       session.value = null
       
-      // Limpar localStorage
+      // Limpar localStorage - incluindo session_start_time
       if (typeof window !== 'undefined') {
         localStorage.removeItem('sb-wynjuzsrydsvkmyhjfhu-auth-token')
+        localStorage.removeItem('session_start_time')
+        localStorage.removeItem('last_activity_time')
+        
+        // Limpar cache também
+        const { clearAppState } = useSessionManager()
+        clearAppState()
       }
       
       console.log('[useAuth] Logout realizado com sucesso')

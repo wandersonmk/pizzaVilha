@@ -52,21 +52,26 @@
           <!-- Detalhes do Pedido -->
           <div>
             <h3 class="font-semibold text-foreground mb-3">Itens do Pedido</h3>
-            <div class="space-y-3">
+            <div class="space-y-2">
               <div
-                v-for="item in pedido?.items"
-                :key="item.nome"
-                class="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                v-for="(item, index) in pedido?.items"
+                :key="index"
+                class="p-3 bg-muted/30 rounded-lg"
               >
-                <div class="flex-1">
-                  <p class="font-medium text-foreground">{{ item.nome }}</p>
-                  <p v-if="item.observacao" class="text-sm text-muted-foreground mt-1">
-                    Obs: {{ item.observacao }}
-                  </p>
-                </div>
-                <div class="text-right">
-                  <p class="text-foreground">{{ item.quantidade }}x R$ {{ item.preco.toFixed(2) }}</p>
-                  <p class="font-semibold text-foreground">R$ {{ (item.quantidade * item.preco).toFixed(2) }}</p>
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1">
+                    <div class="flex items-baseline gap-2">
+                      <span class="font-bold text-primary">{{ item.quantidade }}x</span>
+                      <p class="font-medium text-foreground leading-snug">{{ item.nome }}</p>
+                    </div>
+                    <p v-if="item.observacao" class="text-sm text-muted-foreground mt-1 ml-6">
+                      💬 {{ item.observacao }}
+                    </p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p class="text-sm text-muted-foreground">R$ {{ item.preco.toFixed(2) }} un.</p>
+                    <p class="font-bold text-foreground text-lg">R$ {{ (item.quantidade * item.preco).toFixed(2) }}</p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -7,8 +7,18 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   try {
     console.log('[Auth Middleware] Iniciando verificação...')
     
-    // Aguardar o plugin de auth ter executado - tempo reduzido
-    await new Promise(resolve => setTimeout(resolve, 300))
+    // Validar sessão por tempo primeiro
+    const { validateSession } = useSessionManager()
+    const isSessionValid = await validateSession()
+    
+    if (!isSessionValid) {
+      console.log('[Auth Middleware] Sessão expirada por tempo')
+      return navigateTo('/login')
+    }
+    
+    // Aguardar o plugin de auth ter executado com timeout para evitar loop infinito
+    const waitPromise = new Promise(resolve => setTimeout(resolve, 300))
+    await waitPromise
     
     const { isAuthenticated, user, isLoading } = useAuth()
     
@@ -19,10 +29,17 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       email: user.value?.email
     })
     
-    // Se ainda está carregando, aguarda um pouco mais
+    // Se ainda está carregando, aguarda um pouco mais mas com timeout
     if (isLoading.value) {
       console.log('[Auth Middleware] Aguardando carregamento finalizar...')
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const loadingTimeout = new Promise(resolve => setTimeout(resolve, 800))
+      await loadingTimeout
+      
+      // Se ainda está carregando após timeout, considera como não autenticado
+      if (isLoading.value) {
+        console.warn('[Auth Middleware] Timeout no carregamento, redirecionando')
+        return navigateTo('/login')
+      }
     }
     
     console.log('[Auth Middleware] Estado final:', { 
@@ -32,7 +49,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       email: user.value?.email
     })
     
-    // Se ainda não está autenticado, tenta verificar diretamente no Supabase
+    // Se ainda não está autenticado, tenta verificar diretamente no Supabase com timeout
     if (!isAuthenticated.value || !user.value) {
       console.log('[Auth Middleware] Tentando verificação direta no Supabase...')
       
@@ -40,7 +57,15 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         const nuxtApp = useNuxtApp()
         if (nuxtApp.$supabase) {
           const supabase = nuxtApp.$supabase as any
-          const { data } = await supabase.auth.getSession()
+          
+          // Adicionar timeout para evitar loop infinito
+          const sessionPromise = supabase.auth.getSession()
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 3000)
+          )
+          
+          const { data } = await Promise.race([sessionPromise, timeoutPromise]).catch(() => ({ data: { session: null } })) as any
+          
           if (data.session && data.session.user) {
             console.log('[Auth Middleware] Sessão encontrada diretamente no Supabase:', data.session.user.email)
             // A sessão existe, permitir acesso e deixar o plugin atualizar o estado
