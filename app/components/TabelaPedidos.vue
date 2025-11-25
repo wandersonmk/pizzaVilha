@@ -369,43 +369,84 @@ const converterPedidoParaModal = (pedido: Pedido) => {
   console.log('Debug - Pedido original:', pedido)
   console.log('Debug - Campo pedido:', pedido.pedido)
   
-  // Parse dos itens do pedido (string com quebras de linha para array)
+  const subtotal = parseFloat(pedido.valor_total as any || '0')
+  
+  // Parse dos itens do pedido
   let items = []
   try {
     if (typeof pedido.pedido === 'string') {
-      // Quebrar o texto por linhas e processar cada item
-      const linhas = pedido.pedido.split('\n').filter(linha => linha.trim())
+      // Detectar formato: se tem "x" seguido de " - R$", é formato estruturado
+      const isFormatoEstruturado = pedido.pedido.match(/\d+x\s+.+?\s+-\s+R\$\s+\d+/)
+      
+      let linhas: string[] = []
+      if (isFormatoEstruturado) {
+        // Formato estruturado: separar por vírgula
+        linhas = pedido.pedido.split(',').filter(l => l.trim())
+      } else {
+        // Formato texto livre: separar por quebra de linha
+        linhas = pedido.pedido.split('\n').filter(l => l.trim())
+      }
+      
       console.log('Debug - Linhas encontradas:', linhas)
       
       items = linhas.map((linha, index) => {
+        linha = linha.trim()
         console.log(`Debug - Processando linha ${index}:`, linha)
         
-        // Regex para capturar formato brasileiro: "Nome: R$ 37,00"
-        // Captura: opcionalmente "-", nome, ":", "R$", valor com vírgula
-        const match = linha.match(/^-?\s*(.+?):\s*R\$\s*(\d+(?:,\d{2})?)/)
-        
-        if (match) {
-          const nome = match[1].trim()
-          const precoStr = match[2].replace(',', '.')
-          const preco = parseFloat(precoStr)
+        // Formato estruturado: "2x Pizza Grande - R$ 60.00"
+        const formatoComX = linha.match(/^(\d+)x\s+(.+?)\s*-\s*R\$\s*(\d+(?:[.,]\d{2})?)/)
+        if (formatoComX) {
+          const quantidade = parseInt(formatoComX[1], 10)
+          const nome = formatoComX[2].trim()
+          const precoTotal = parseFloat(formatoComX[3].replace(',', '.'))
+          const precoUnitario = precoTotal / quantidade
           
-          console.log(`Debug - Match encontrado: nome="${nome}", preço="${preco}"`)
+          console.log(`Debug - Formato estruturado: quantidade=${quantidade}, nome="${nome}", preço unitário=${precoUnitario}`)
           
           return {
             nome: nome,
-            quantidade: 1,
-            preco: preco,
+            quantidade: quantidade,
+            preco: precoUnitario,
             observacao: undefined
           }
+        }
+        
+        // Formato texto livre: "2 pizzas grandes..." ou "1 Coca-Cola..."
+        const quantMatch = linha.match(/^(\d+)\s+(.+)/)
+        let quantidade = 1
+        let nomeItem = linha.trim()
+        
+        if (quantMatch) {
+          quantidade = parseInt(quantMatch[1], 10)
+          nomeItem = quantMatch[2].trim()
+        }
+        
+        // Tentar capturar preço se houver
+        const precoMatch = linha.match(/(?::|-)?\s*R\$\s*(\d+(?:[.,]\d{2})?)/)
+        let preco = 0
+        
+        if (precoMatch && precoMatch[1]) {
+          const precoStr = precoMatch[1].replace(',', '.')
+          const precoTotal = parseFloat(precoStr)
+          preco = precoTotal / quantidade
+          
+          // Remover a parte do preço do nome
+          nomeItem = nomeItem.replace(/(?::|-)?\s*R\$\s*\d+(?:[.,]\d{2})?/, '').trim()
         } else {
-          console.log(`Debug - Sem match para linha: "${linha}"`)
-          // Fallback se não conseguir fazer parse
-          return {
-            nome: linha.trim(),
-            quantidade: 1,
-            preco: 0,
-            observacao: undefined
-          }
+          // Sem preço individual: dividir subtotal proporcionalmente
+          preco = subtotal / linhas.reduce((sum, l) => {
+            const qMatch = l.match(/^(\d+)\s+/)
+            return sum + (qMatch ? parseInt(qMatch[1], 10) : 1)
+          }, 0)
+        }
+        
+        console.log(`Debug - Formato texto livre: quantidade=${quantidade}, nome="${nomeItem}", preço=${preco}`)
+        
+        return {
+          nome: nomeItem,
+          quantidade: quantidade,
+          preco: preco,
+          observacao: undefined
         }
       })
     }
@@ -414,7 +455,7 @@ const converterPedidoParaModal = (pedido: Pedido) => {
     items = [{
       nome: pedido.pedido || 'Erro ao carregar itens',
       quantidade: 1,
-      preco: parseFloat(pedido.valor_total as any || '0')
+      preco: subtotal
     }]
   }
 
@@ -423,7 +464,7 @@ const converterPedidoParaModal = (pedido: Pedido) => {
     items = [{
       nome: pedido.pedido || 'Pedido sem detalhes',
       quantidade: 1,
-      preco: parseFloat(pedido.valor_total as any || '0')
+      preco: subtotal
     }]
   }
 

@@ -84,8 +84,8 @@
             </NuxtLink>
           </li>
 
-          <!-- Cupons de Desconto -->
-          <li>
+          <!-- Cupons de Desconto - OCULTO -->
+          <!-- <li>
             <NuxtLink 
               to="/cupons"
               class="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted group relative"
@@ -97,7 +97,7 @@
               />
               <span>Cupons de Desconto</span>
             </NuxtLink>
-          </li>
+          </li> -->
 
           <!-- Relatórios -->
           <li>
@@ -275,8 +275,8 @@
             </NuxtLink>
           </li>
 
-          <!-- Cupons de Desconto -->
-          <li>
+          <!-- Cupons de Desconto - OCULTO -->
+          <!-- <li>
             <NuxtLink 
               to="/cupons"
               @click="$emit('close-mobile')"
@@ -289,7 +289,7 @@
               />
               <span>Cupons de Desconto</span>
             </NuxtLink>
-          </li>
+          </li> -->
 
           <!-- Relatórios -->
           <li>
