@@ -1180,16 +1180,33 @@ const criarPedido = async () => {
       return
     }
 
-    // Buscar o último número de pedido para incrementar
-    const { data: ultimoPedido } = await supabase
-      .from('pedidos')
-      .select('numero_pedido')
-      .eq('empresa_id', empresaId)
-      .order('numero_pedido', { ascending: false })
+    // Buscar o último número de pedido da tabela numero_pedido
+    const { data: numeroData, error: numeroError } = await supabase
+      .from('numero_pedido')
+      .select('numero')
+      .order('id', { ascending: false })
       .limit(1)
       .single()
 
-    const proximoNumero = ultimoPedido ? ultimoPedido.numero_pedido + 1 : 1
+    if (numeroError) {
+      console.error('Erro ao buscar número do pedido:', numeroError)
+      toast.error('Erro ao obter número do pedido')
+      return
+    }
+
+    const proximoNumero = numeroData ? numeroData.numero + 1 : 1
+
+    // Atualizar a tabela numero_pedido com o próximo número
+    const { error: updateNumeroError } = await supabase
+      .from('numero_pedido')
+      .update({ numero: proximoNumero })
+      .eq('id', 1)
+
+    if (updateNumeroError) {
+      console.error('Erro ao atualizar número do pedido:', updateNumeroError)
+      toast.error('Erro ao atualizar número do pedido')
+      return
+    }
 
     // Montar descrição do pedido com preços individuais
     // Formato: "2x Pizza Grande - R$ 60.00" (quebra de linha entre itens)
