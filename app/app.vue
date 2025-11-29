@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-
-// Inicializar gerenciamento de sessão
-if (process.client) {
-  onMounted(() => {
-    const { initSessionManager } = useSessionManager()
-    initSessionManager()
-  })
-}
+// App raiz - sem lógica de sessão aqui para evitar loops
 </script>
 
 <template>

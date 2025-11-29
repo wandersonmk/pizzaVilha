@@ -62,35 +62,35 @@ export const useSessionManager = () => {
     }
   }
 
-  // Verificar se a sessão expirou (validação de tempo total)
-  const validateSession = async (): Promise<boolean> => {
-    const sessionStartTime = localStorage.getItem('session_start_time')
-    
-    if (sessionStartTime) {
-      const timeSinceStart = Date.now() - parseInt(sessionStartTime, 10)
+  // Verificar se a sessão do Supabase está válida
+  const checkSupabaseSession = async (): Promise<boolean> => {
+    try {
+      const nuxtApp = useNuxtApp()
+      if (!nuxtApp.$supabase) return false
+
+      const { data, error } = await (nuxtApp.$supabase as any).auth.getSession()
       
-      if (timeSinceStart > SESSION_TIMEOUT) {
-        console.log('[SessionManager] Sessão expirou após 2 horas, forçando logout...')
-        clearAppState()
-        
-        // Tentar fazer logout no Supabase
-        try {
-          const nuxtApp = useNuxtApp()
-          if (nuxtApp.$supabase) {
-            await (nuxtApp.$supabase as any).auth.signOut()
-          }
-        } catch (e) {
-          console.warn('[SessionManager] Erro ao fazer logout:', e)
-        }
-        
+      if (error || !data.session) {
         return false
       }
-    } else {
-      // Se não tem session_start_time, criar um
-      localStorage.setItem('session_start_time', Date.now().toString())
+
+      const expiresAt = data.session.expires_at
+      if (expiresAt && expiresAt * 1000 < Date.now()) {
+        return false
+      }
+
+      return true
+    } catch (e) {
+      return false
     }
-    
-    return true
+  }
+
+  // Limpar tudo e ir para login
+  const forceLogout = () => {
+    console.log('[SessionManager] Forçando logout - limpando tudo')
+    localStorage.clear()
+    sessionStorage.clear()
+    window.location.href = '/login'
   }
 
   // Verificar se o cache expirou
@@ -120,28 +120,22 @@ export const useSessionManager = () => {
     }, INACTIVITY_TIMEOUT)
   }
 
-  // Verificar se houve inatividade prolongada ao retornar
+  // Verificar inatividade
   const checkInactivity = async () => {
     const lastActivity = localStorage.getItem('last_activity_time')
     if (lastActivity) {
       const timeSinceLastActivity = Date.now() - parseInt(lastActivity, 10)
       
       if (timeSinceLastActivity > INACTIVITY_TIMEOUT) {
-        console.log('[SessionManager] Detectada inatividade prolongada, limpando estados...')
-        clearAppState()
+        console.log('[SessionManager] Inatividade detectada')
         
-        // Verificar se a sessão ainda é válida
-        const isValid = await validateSession()
-        if (!isValid) {
-          console.log('[SessionManager] Sessão inválida, redirecionando para login...')
-          window.location.href = '/login'
+        const supabaseValid = await checkSupabaseSession()
+        if (!supabaseValid) {
+          forceLogout()
           return
         }
         
-        // Forçar reload da página para estado limpo
-        setTimeout(() => {
-          window.location.reload()
-        }, 500)
+        clearAppState()
       }
     }
   }
@@ -153,8 +147,15 @@ export const useSessionManager = () => {
     // Verificar cache expirado ao iniciar
     checkCacheExpiry()
 
-    // Verificar inatividade ao iniciar
-    checkInactivity()
+    // Verificar inatividade ao iniciar (mas sem forçar reload/redirect)
+    const lastActivity = localStorage.getItem('last_activity_time')
+    if (lastActivity) {
+      const timeSinceLastActivity = Date.now() - parseInt(lastActivity, 10)
+      if (timeSinceLastActivity > INACTIVITY_TIMEOUT) {
+        console.log('[SessionManager] Detectada inatividade prolongada, limpando cache...')
+        clearAppState()
+      }
+    }
 
     // Eventos que resetam o timer de inatividade
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
@@ -173,11 +174,27 @@ export const useSessionManager = () => {
     })
 
     // Detectar quando a janela recupera o foco
-    window.addEventListener('focus', () => {
-      console.log('[SessionManager] Janela recuperou foco, verificando sessão...')
-      checkInactivity()
+    window.addEventListener('focus', async () => {
+      console.log('[SessionManager] Foco recuperado')
+      
+      const supabaseValid = await checkSupabaseSession()
+      if (!supabaseValid) {
+        forceLogout()
+        return
+      }
+      
+      await checkInactivity()
       checkCacheExpiry()
     })
+
+    // Verificação periódica (10 minutos)
+    const sessionCheckInterval = setInterval(async () => {
+      const supabaseValid = await checkSupabaseSession()
+      if (!supabaseValid) {
+        clearInterval(sessionCheckInterval)
+        forceLogout()
+      }
+    }, 10 * 60 * 1000)
 
     // Iniciar timer
     resetInactivityTimer()
@@ -190,13 +207,13 @@ export const useSessionManager = () => {
       if (inactivityTimer) {
         clearTimeout(inactivityTimer)
       }
+      clearInterval(sessionCheckInterval)
     })
   }
 
   return {
     initSessionManager,
     clearAppState,
-    checkCacheExpiry,
-    validateSession
+    checkCacheExpiry
   }
 }
