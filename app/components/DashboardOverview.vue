@@ -68,9 +68,9 @@
           <div class="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           <div class="relative z-10 flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-400 mb-1">Total de Clientes</p>
-              <p class="text-2xl font-bold text-foreground">{{ metrics.faturamento.toLocaleString('pt-BR') }}</p>
-              <p class="text-xs text-purple-600 mt-1">cadastrados</p>
+              <p class="text-sm text-gray-400 mb-1">Total de Pedidos</p>
+              <p class="text-2xl font-bold text-foreground">{{ stats.totalPedidos }}</p>
+              <p class="text-xs text-purple-600 mt-1">realizados</p>
             </div>
             <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
               <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,7 +122,7 @@ const metrics = computed(() => ({
   clientesHoje: stats.value.pedidosHoje,
   clientesNovos: stats.value.pedidosSemana,
   clientesVencendo: stats.value.pedidosMes,
-  faturamento: stats.value.totalClientes
+  faturamento: stats.value.receitaTotal
 }))
 
 // Configuração do gráfico de linha
