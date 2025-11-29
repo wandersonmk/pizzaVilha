@@ -48,17 +48,6 @@
             class="w-full"
           />
         </div>
-
-        <!-- Logotipo URL -->
-        <div class="space-y-2 md:col-span-2">
-          <label class="block text-sm font-medium text-foreground">URL do Logotipo</label>
-          <AppInput
-            v-model="configuracoes.logotipo"
-            placeholder="https://exemplo.com/logo.png"
-            class="w-full"
-          />
-          <p class="text-xs text-muted-foreground">Cole a URL da imagem do seu logotipo</p>
-        </div>
       </div>
     </div>
 

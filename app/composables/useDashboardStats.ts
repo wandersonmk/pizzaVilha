@@ -85,9 +85,8 @@ export const useDashboardStats = () => {
           stats.value.pedidosSemana = pedidos.filter(p => new Date(p.created_at) >= seteDiasAtras).length
           stats.value.pedidosMes = pedidos.filter(p => new Date(p.created_at) >= inicioMes).length
           
-          // Clientes únicos
-          const clientesUnicos = new Set(pedidos.map(p => p.nome_cliente))
-          stats.value.totalClientes = clientesUnicos.size
+          // Total de clientes (total de pedidos, não clientes únicos)
+          stats.value.totalClientes = pedidos.length
           
           // Receita total
           stats.value.receitaTotal = pedidos.reduce((sum, p) => sum + parseFloat(p.valor_total || '0'), 0)

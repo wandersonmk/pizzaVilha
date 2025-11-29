@@ -89,6 +89,8 @@ const pageTitle = computed(() => {
       return 'Relatórios'
     case '/cupons':
       return 'Cupons de Desconto'
+    case '/configuracoes':
+      return 'Configurações'
     default:
       return 'Dashboard'
   }
@@ -108,6 +110,8 @@ const pageDescription = computed(() => {
       return 'Análise e controle de pedidos'
     case '/cupons':
       return 'Crie e gerencie cupons promocionais'
+    case '/configuracoes':
+      return 'Configure as definições do sistema e seu delivery'
     default:
       return 'Visão geral do sistema'
   }

@@ -34,14 +34,6 @@ onMounted(async () => {
     
     <!-- Página de Configurações quando carregado -->
     <div v-else class="space-y-6">
-      <!-- Header da página -->
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-foreground">Configurações</h1>
-          <p class="text-muted-foreground">Configure as definições do sistema e seu delivery</p>
-        </div>
-      </div>
-
       <!-- Componente de Configurações -->
       <PgConfiguracoes />
     </div>
