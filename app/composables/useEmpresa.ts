@@ -35,12 +35,14 @@ export function useEmpresa() {
 
       console.log('Buscando empresa para usuário:', user.id)
       
-      // Busca a empresa no banco
+      // Busca a empresa através da tabela de relacionamento
       const { data, error } = await supabase
-        .from('empresas')
-        .select('nome')
+        .from('empresa_usuarios')
+        .select('empresas(nome)')
         .eq('usuario_id', user.id)
         .single()
+      
+      const empresaData = data?.empresas as any
 
       if (error) {
         console.error('Erro ao buscar empresa:', error)
@@ -48,8 +50,8 @@ export function useEmpresa() {
         return
       }
 
-      console.log('Nome da empresa encontrado:', data?.nome)
-      nomeEmpresa.value = data?.nome || null
+      console.log('Nome da empresa encontrado:', empresaData?.nome)
+      nomeEmpresa.value = empresaData?.nome || null
       
     } catch (err) {
       console.error('Erro:', err)
@@ -74,10 +76,10 @@ export function useEmpresa() {
         return null
       }
 
-      // Busca a empresa no banco
+      // Busca a empresa através da tabela de relacionamento
       const { data, error } = await supabase
-        .from('empresas')
-        .select('id')
+        .from('empresa_usuarios')
+        .select('empresa_id')
         .eq('usuario_id', user.id)
         .single()
 
@@ -86,7 +88,7 @@ export function useEmpresa() {
         return null
       }
 
-      return data?.id || null
+      return data?.empresa_id || null
       
     } catch (err) {
       console.error('Erro ao buscar empresa ID:', err)
@@ -109,8 +111,8 @@ export function useEmpresa() {
       }
 
       const { data, error } = await supabase
-        .from('empresas')
-        .select('id, nome, endereco, telefone, logotipo, hora_abertura, hora_fechamento, tempo_estimado, aberto')
+        .from('empresa_usuarios')
+        .select('empresas(id, nome, endereco, telefone, logotipo, hora_abertura, hora_fechamento, tempo_estimado, aberto)')
         .eq('usuario_id', user.id)
         .single()
 
@@ -119,7 +121,8 @@ export function useEmpresa() {
         return null
       }
 
-      return data as EmpresaConfig
+      const empresaData = data?.empresas as any
+      return empresaData as EmpresaConfig
       
     } catch (err) {
       console.error('Erro ao buscar configurações:', err)
@@ -141,10 +144,17 @@ export function useEmpresa() {
         return false
       }
 
+      // Buscar empresa_id do usuário
+      const empresaId = await getEmpresaId()
+      if (!empresaId) {
+        console.error('Empresa não encontrada para o usuário')
+        return false
+      }
+
       const { error } = await supabase
         .from('empresas')
         .update(config)
-        .eq('usuario_id', user.id)
+        .eq('id', empresaId)
 
       if (error) {
         console.error('Erro ao salvar configurações:', error)
