@@ -4,8 +4,8 @@
       <!-- Header -->
       <div class="text-center mb-12">
         <div class="flex justify-center mb-4">
-          <div class="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
-            <Icon name="ph:question" class="w-12 h-12 text-white" />
+          <div class="p-4 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl shadow-lg">
+            <Icon name="ph:pizza" class="w-12 h-12 text-white" />
           </div>
         </div>
         <h1 class="text-4xl font-bold text-foreground mb-3">Central de Ajuda</h1>
