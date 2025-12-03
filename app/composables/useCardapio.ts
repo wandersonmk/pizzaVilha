@@ -16,28 +16,73 @@ export const useCardapio = () => {
   // Obter empresa_id do usuário logado
   const obterEmpresaId = async (): Promise<string | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user?.id) return null
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError) {
+        console.error('❌ [useCardapio] Erro ao obter usuário:', authError)
+        return null
+      }
+      
+      if (!user?.id) {
+        console.log('⚠️ [useCardapio] Usuário não está logado')
+        return null
+      }
 
-      const { data, error: empresaError } = await supabase
+      console.log('🔍 [useCardapio] Buscando empresa para user.id:', user.id, 'email:', user.email)
+
+      // 1. PRIORIDADE: Buscar empresa compartilhada via empresa_usuarios
+      const { data: empresaCompartilhada, error: erroCompartilhada } = await supabase
+        .from('empresa_usuarios')
+        .select('empresa_id')
+        .eq('usuario_id', user.id)
+        .limit(1)
+        .maybeSingle()
+
+      if (erroCompartilhada) {
+        console.error('❌ [useCardapio] Erro ao buscar empresa compartilhada:', erroCompartilhada)
+      }
+
+      if (empresaCompartilhada?.empresa_id) {
+        console.log('✅ [useCardapio] Usando empresa compartilhada:', empresaCompartilhada.empresa_id)
+        return empresaCompartilhada.empresa_id
+      }
+
+      console.log('ℹ️ [useCardapio] Nenhuma empresa compartilhada encontrada, buscando empresa própria...')
+
+      // 2. FALLBACK: Buscar empresa própria (onde usuario_id é dono)
+      const { data: empresaPropria, error: erroPropria } = await supabase
         .from('empresas')
         .select('id')
         .eq('usuario_id', user.id)
-        .single()
+        .maybeSingle()
 
-      if (empresaError) throw empresaError
-      return data?.id || null
+      if (erroPropria) {
+        console.error('❌ [useCardapio] Erro ao buscar empresa própria:', erroPropria)
+      }
+
+      if (empresaPropria?.id) {
+        console.log('✅ [useCardapio] Usando empresa própria:', empresaPropria.id)
+        return empresaPropria.id
+      }
+
+      console.warn('⚠️ [useCardapio] Nenhuma empresa encontrada para o usuário')
+      return null
     } catch (e) {
-      console.error('Erro ao obter empresa_id:', e)
+      console.error('❌ [useCardapio] Erro ao obter empresa_id:', e)
       return null
     }
   }
 
   // Carregar categorias do banco
   const carregarCategorias = async () => {
+    console.log('🚀 [carregarCategorias] INICIANDO...')
     const empresaId = await obterEmpresaId()
+    console.log('🏢 [carregarCategorias] empresaId obtido:', empresaId)
+    console.log('🏢 [carregarCategorias] tipo do empresaId:', typeof empresaId)
+    
     if (!empresaId) {
       error.value = 'Empresa não identificada'
+      console.error('❌ [carregarCategorias] Empresa não identificada - empresaId é:', empresaId)
       return
     }
 
@@ -45,6 +90,7 @@ export const useCardapio = () => {
       loading.value = true
       error.value = null
 
+      console.log('📡 [carregarCategorias] Buscando categorias para empresa:', empresaId)
       const { data, error: supabaseError } = await supabase
         .from('categorias')
         .select('*')
@@ -52,7 +98,13 @@ export const useCardapio = () => {
         .eq('ativa', true)
         .order('ordem', { ascending: true })
 
-      if (supabaseError) throw supabaseError
+      if (supabaseError) {
+        console.error('❌ [carregarCategorias] Erro Supabase:', supabaseError)
+        throw supabaseError
+      }
+
+      console.log('✅ [carregarCategorias] Categorias encontradas:', data?.length || 0)
+      console.log('📋 [carregarCategorias] Dados:', data)
 
       // Mapear os dados do banco para o formato esperado
       cardapioState.value.categorias = (data || []).map((cat: any) => ({
@@ -73,9 +125,14 @@ export const useCardapio = () => {
 
   // Carregar produtos do banco
   const carregarProdutos = async () => {
+    console.log('🚀 [carregarProdutos] INICIANDO...')
     const empresaId = await obterEmpresaId()
+    console.log('🏢 [carregarProdutos] empresaId obtido:', empresaId)
+    console.log('🏢 [carregarProdutos] tipo do empresaId:', typeof empresaId)
+    
     if (!empresaId) {
       error.value = 'Empresa não identificada'
+      console.error('❌ [carregarProdutos] Empresa não identificada - empresaId é:', empresaId)
       return
     }
 
@@ -83,13 +140,20 @@ export const useCardapio = () => {
       loading.value = true
       error.value = null
 
+      console.log('📡 [carregarProdutos] Buscando produtos para empresa:', empresaId)
       const { data, error: supabaseError } = await supabase
         .from('produtos')
         .select('*')
         .eq('empresa_id', empresaId)
         // Removido filtro .eq('ativo', true) para carregar todos os produtos
 
-      if (supabaseError) throw supabaseError
+      if (supabaseError) {
+        console.error('❌ [carregarProdutos] Erro Supabase:', supabaseError)
+        throw supabaseError
+      }
+      
+      console.log('✅ [carregarProdutos] Produtos encontrados:', data?.length || 0)
+      console.log('📋 [carregarProdutos] Primeiros 3 produtos:', data?.slice(0, 3))
 
       // Mapear os dados do banco para o formato esperado
       cardapioState.value.produtos = (data || []).map((prod: any) => ({
