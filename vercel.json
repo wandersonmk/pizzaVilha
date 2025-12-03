@@ -2,6 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".output/public",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": "nuxtjs"
+  "installCommand": "rm -rf node_modules .nuxt && npm install --legacy-peer-deps",
+  "framework": "nuxtjs",
+  "crons": []
 }
