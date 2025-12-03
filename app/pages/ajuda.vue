@@ -13,15 +13,26 @@
           Aprenda a usar todas as funcionalidades do sistema de forma rápida e eficiente
         </p>
         
-        <!-- Botão WhatsApp -->
-        <a 
-          href="https://wa.me/5575991198502?text=Preciso%20de%20ajuda%20para%20o%20aplicativo%20Pizza%20Vilha"
-          target="_blank"
-          class="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
-        >
-          <Icon name="ph:whatsapp-logo" class="w-6 h-6" />
-          Falar com Suporte no WhatsApp
-        </a>
+        <!-- Botões de Ação -->
+        <div class="flex flex-wrap justify-center gap-4">
+          <a 
+            href="https://wa.me/5575991198502?text=Preciso%20de%20ajuda%20para%20o%20aplicativo%20Pizza%20Vilha"
+            target="_blank"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
+          >
+            <Icon name="ph:whatsapp-logo" class="w-6 h-6" />
+            Falar com Suporte no WhatsApp
+          </a>
+          
+          <a 
+            href="#"
+            target="_blank"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
+          >
+            <Icon name="ph:youtube-logo" class="w-6 h-6" />
+            Vídeo Aulas no YouTube
+          </a>
+        </div>
       </div>
     </div>
   </div>
