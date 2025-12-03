@@ -404,6 +404,8 @@ export const usePedidos = () => {
   // Real-time subscription
   // Polling para simular real-time quando Supabase Realtime não está habilitado
   let pollingInterval: NodeJS.Timeout | null = null
+  let realtimeSubscription: any = null
+  let isRealtimeConnected = false
   const modalAberto = useState<boolean>('modal_novo_pedido_aberto', () => false)
 
   const startPolling = (intervalMs: number = 30000) => { // 30 segundos por padrão
@@ -454,8 +456,30 @@ export const usePedidos = () => {
           
           if (payload.eventType === 'INSERT' && payload.new) {
             const novoPedido = convertSupabasePedido(payload.new as PedidoSupabase)
-            pedidos.value.unshift(novoPedido)
-            console.log('✅ [Real-time] Novo pedido adicionado:', novoPedido)
+            // Verificar se o pedido já existe antes de adicionar (evita duplicação)
+            const jaExiste = pedidos.value.find(p => p.id === novoPedido.id)
+            if (!jaExiste) {
+              pedidos.value.unshift(novoPedido)
+              console.log('✅ [Real-time] Novo pedido adicionado:', novoPedido)
+              
+              // Tocar notificação se o pedido for novo
+              if (novoPedido.status === 'novo') {
+                console.log('🔔 [Real-time] Novo pedido com status "novo" - tocando notificação')
+                playNotification()
+                
+                // Adicionar aos destacados
+                pedidosDestacados.value.add(novoPedido.id)
+                console.log('💡 [Destaque] Pedido destacado:', novoPedido.id)
+                
+                // Remover destaque após 10 segundos
+                setTimeout(() => {
+                  pedidosDestacados.value.delete(novoPedido.id)
+                  console.log('✨ [Destaque] Destaque removido do pedido:', novoPedido.id)
+                }, 10000)
+              }
+            } else {
+              console.log('⚠️ [Real-time] Pedido já existe, ignorando INSERT:', novoPedido.id)
+            }
           } else if (payload.eventType === 'UPDATE' && payload.new) {
             const pedidoAtualizado = convertSupabasePedido(payload.new as PedidoSupabase)
             const index = pedidos.value.findIndex(p => p.id === pedidoAtualizado.id)
@@ -478,18 +502,30 @@ export const usePedidos = () => {
         // Se não conseguir conectar ao Realtime, usar polling como fallback
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           console.log('[Real-time] Falha ao conectar, usando polling como alternativa')
+          isRealtimeConnected = false
           startPolling(30000) // Atualizar a cada 30 segundos
         } else if (status === 'SUBSCRIBED') {
           console.log('[Real-time] Conectado com sucesso!')
+          isRealtimeConnected = true
           stopPolling() // Parar polling se Realtime funcionar
         }
       })
 
-    // Iniciar polling por padrão após 3 segundos se não houver resposta do Realtime
+    // Armazenar subscription para cleanup posterior
+    realtimeSubscription = subscription
+
+    // Sempre iniciar polling como backup após 5 segundos
+    // Se Realtime conectou, usa intervalo maior (60s) para economia
+    // Se não conectou, usa intervalo menor (30s) para compensar
     setTimeout(() => {
-      console.log('[Real-time] Iniciando polling como fallback...')
-      startPolling(30000) // 30 segundos
-    }, 3000)
+      if (!isRealtimeConnected) {
+        console.log('[Real-time] Realtime não conectou, iniciando polling frequente (30s)...')
+        startPolling(30000) // 30 segundos
+      } else {
+        console.log('[Real-time] Realtime conectado, iniciando polling backup (60s)...')
+        startPolling(60000) // 60 segundos como backup
+      }
+    }, 5000)
 
     return subscription
   }
@@ -549,6 +585,19 @@ export const usePedidos = () => {
     }
   }
 
+  // Função de cleanup para desmontar subscriptions
+  const cleanup = () => {
+    console.log('[usePedidos] Executando cleanup...')
+    stopPolling()
+    if (realtimeSubscription) {
+      supabase.removeChannel(realtimeSubscription)
+      realtimeSubscription = null
+      isRealtimeConnected = false
+      console.log('[usePedidos] Realtime subscription removida')
+    }
+    stopNotification()
+  }
+
   return {
     pedidos: readonly(pedidos),
     isLoading: readonly(isLoading),
@@ -567,6 +616,7 @@ export const usePedidos = () => {
     pedidosDestacados: readonly(pedidosDestacados), // IDs dos pedidos destacados
     formatTelefone,
     testSupabaseConnection,
+    cleanup, // Limpar subscriptions e polling
     // Controle do modal
     setModalAberto: (value: boolean) => { modalAberto.value = value }
   }

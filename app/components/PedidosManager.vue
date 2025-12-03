@@ -228,7 +228,8 @@ const {
   setupRealtimeSubscription,
   stopNotification,
   pedidosDestacados,
-  setModalAberto
+  setModalAberto,
+  cleanup
 } = usePedidos()
 
 // Debug: Verificar se as funções foram carregadas
@@ -289,6 +290,12 @@ onMounted(async () => {
   await fetchPedidos()
   setupRealtimeSubscription()
   console.log('[PedidosManager] Inicialização concluída')
+})
+
+// Limpar subscriptions quando componente for desmontado
+onUnmounted(() => {
+  console.log('[PedidosManager] Componente desmontado, executando cleanup...')
+  cleanup()
 })
 
 // Mostrar erro se houver
