@@ -100,25 +100,45 @@ export const usePedidos = () => {
     try {
       if (typeof pedidoSupabase.pedido === 'string') {
         // Suportar múltiplos formatos:
-        // 1. Separado por vírgula com preço: "2x Pizza - R$ 181.00, 1x Coca - R$ 5.00"
-        // 2. Separado por quebra de linha: "2 pizzas grandes...\n1 Coca-Cola..."
-        
-        // Detectar formato: se tem "x" seguido de " - R$", é formato estruturado
-        const isFormatoEstruturado = pedidoSupabase.pedido.match(/\d+x\s+.+?\s+-\s+R\$\s+\d+/)
+        // 1. Separado por ponto e vírgula: "1 Pizza R$ 52,00; 1 Borda R$ 10,00"
+        // 2. Separado por vírgula com preço: "2x Pizza - R$ 181.00, 1x Coca - R$ 5.00"
+        // 3. Separado por quebra de linha: "2 pizzas grandes...\n1 Coca-Cola..."
         
         let linhas: string[] = []
-        if (isFormatoEstruturado) {
-          // Formato estruturado: separar por vírgula
+        
+        // Verificar se usa ponto e vírgula (formato novo)
+        if (pedidoSupabase.pedido.includes(';')) {
+          linhas = pedidoSupabase.pedido.split(';').filter(l => l.trim())
+        }
+        // Verificar formato estruturado com "x" e " - R$"
+        else if (pedidoSupabase.pedido.match(/\d+x\s+.+?\s+-\s+R\$\s+\d+/)) {
           linhas = pedidoSupabase.pedido.split(',').filter(l => l.trim())
-        } else {
-          // Formato texto livre: separar por quebra de linha
+        }
+        // Formato texto livre: separar por quebra de linha
+        else {
           linhas = pedidoSupabase.pedido.split('\n').filter(l => l.trim())
         }
         
         items = linhas.map((linha) => {
           linha = linha.trim()
           
-          // Formato estruturado: "2x Pizza Grande - R$ 60.00"
+          // Formato novo: "1 Pizza Média (Frango) R$ 52,00"
+          const formatoNovo = linha.match(/^(\d+)\s+(.+?)\s+R\$\s*(\d+(?:[.,]\d{2})?)/)
+          if (formatoNovo) {
+            const quantidade = parseInt(formatoNovo[1], 10)
+            const nome = formatoNovo[2].trim()
+            const precoTotal = parseFloat(formatoNovo[3].replace(',', '.'))
+            const precoUnitario = precoTotal / quantidade
+            
+            return {
+              nome: nome,
+              quantidade: quantidade,
+              preco: precoUnitario,
+              observacao: undefined
+            }
+          }
+          
+          // Formato estruturado antigo: "2x Pizza Grande - R$ 60.00"
           const formatoComX = linha.match(/^(\d+)x\s+(.+?)\s*-\s*R\$\s*(\d+(?:[.,]\d{2})?)/)
           if (formatoComX) {
             const quantidade = parseInt(formatoComX[1], 10)
